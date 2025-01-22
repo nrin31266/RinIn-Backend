@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: 'jdbc:mysql://localhost:3306/linkedin?createDatabaseIfNotExist=true'
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  signerKey: "HDKdDVDEpABtpunTzN2QM2pbmVzDP5jht6WGykegNKgsKDVdDlbzFVmU1vDOVOHV"
+
+brevo:
+  apiKey: ${BREVO_API_KEY}
+  email: "nrin31266@gmail.com"
+  name: "Linkedin clone by VanRin05"
+
+server:
+  servlet:
+    context-path: /api/v1
+
