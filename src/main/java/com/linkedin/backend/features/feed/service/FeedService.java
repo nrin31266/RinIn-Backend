@@ -65,8 +65,8 @@ public class FeedService {
 
 
 //    @Transactional
-    public List<PostResponse> getAllPosts() {
-        return postRepository.findAllByOrderByCreationDateDesc().stream().map(postMapper::toPostResponse).toList();
+    public List<Post> getAllPosts() {
+        return postRepository.findAllByOrderByCreationDateDesc();
     }
 
     public List<Post> getPostsByUserId(Long userId) {

@@ -24,5 +24,5 @@ public class PostResponse {
     LocalDateTime creationDate;
     LocalDateTime updateDate;
     Set<User> likes;
-//    List<Comment> comments;
+    List<Comment> comments;
 }

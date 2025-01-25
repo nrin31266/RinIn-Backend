@@ -43,11 +43,12 @@ public class Post {
     )
     Set<User> likes;
 
-    @JsonIgnore
+
     @OneToMany(
             mappedBy = "post",
             cascade = CascadeType.ALL,
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
     )
     List<Comment> comments;
 

@@ -59,9 +59,9 @@ public class FeedController {
     }
 
     @GetMapping("/posts")
-    public ApiResponse<List<PostResponse>> getAllPosts() {
-        List<PostResponse> posts = feedService.getAllPosts();
-        return ApiResponse.<List<PostResponse>>builder()
+    public ApiResponse<List<Post>> getAllPosts() {
+        List<Post> posts = feedService.getAllPosts();
+        return ApiResponse.<List<Post>>builder()
                 .data(posts)
                 .build();
     }
