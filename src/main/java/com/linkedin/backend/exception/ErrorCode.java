@@ -28,6 +28,7 @@ public enum ErrorCode {
     // User Profile
     POST_CONTENT_IS_REQUIRED(10015, "Post content is required", HttpStatus.CONFLICT),
     POST_NOT_FOUND(10016, "Post not found", HttpStatus.NOT_FOUND),
+    COMMENT_NOT_FOUND(10017, "Comment not found", HttpStatus.NOT_FOUND),
     ;
 
 

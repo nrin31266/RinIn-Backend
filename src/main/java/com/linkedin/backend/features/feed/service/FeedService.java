@@ -110,7 +110,7 @@ public class FeedService {
 
     public Comment updateComment(Long commentId, CommentRequest req, Long authenticatedUserId) {
         User user = authenticationUserRepository.findById(authenticatedUserId).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
-        Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new AppException(ErrorCode.POST_NOT_FOUND));
+        Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new AppException(ErrorCode.COMMENT_NOT_FOUND));
 
         if(!comment.getAuthor().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
@@ -122,12 +122,11 @@ public class FeedService {
 
     public void removeComment(Long commentId, Long authenticatedUserId) {
         User user = authenticationUserRepository.findById(authenticatedUserId).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
-        Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new AppException(ErrorCode.POST_NOT_FOUND));
+        Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new AppException(ErrorCode.COMMENT_NOT_FOUND));
 
         if(!comment.getAuthor().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         commentRepository.delete(comment);
-
     }
 }
