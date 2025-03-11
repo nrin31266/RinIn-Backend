@@ -46,9 +46,8 @@ public class Post {
 
     @OneToMany(
             mappedBy = "post",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.EAGER
+            fetch = FetchType.EAGER,
+            orphanRemoval = true
     )
     List<Comment> comments;
 

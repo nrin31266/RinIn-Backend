@@ -24,7 +24,7 @@ public class LoadDatabaseConfiguration {
     @Bean
     CommandLineRunner initDatabase(AuthenticationUserRepository authenticationUserRepository, PostRepository postRepository) {
         return args -> {
-            if(authenticationUserRepository.findByEmail("nrin31266@yopmail.com").isEmpty()){
+            if (authenticationUserRepository.findByEmail("nrin31266@yopmail.com").isEmpty()) {
                 User authenticationUser = User.builder()
                         .email("nrin31266@yopmail.com")
                         .password(encoder.encode("123"))
@@ -57,7 +57,7 @@ public class LoadDatabaseConfiguration {
     }
 
     private User createUser(String email, String password, String firstName, String lastName, String position,
-                                          String company, String location, String profilePicture) {
+                            String company, String location, String profilePicture) {
         User user = new User();
         user.setEmail(email);
         user.setPassword(encoder.encode(password));
@@ -85,6 +85,7 @@ public class LoadDatabaseConfiguration {
             postRepository.save(post);
         }
     }
+
     private HashSet<User> generateLikes(List<User> users, int postNumber, Random random) {
         HashSet<User> likes = new HashSet<>();
         if (postNumber == 1) {

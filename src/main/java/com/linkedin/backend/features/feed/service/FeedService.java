@@ -119,7 +119,6 @@ public class FeedService {
 
         return commentRepository.save(comment);
     }
-
     public void removeComment(Long commentId, Long authenticatedUserId) {
         User user = authenticationUserRepository.findById(authenticatedUserId).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
         Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new AppException(ErrorCode.COMMENT_NOT_FOUND));
@@ -127,6 +126,10 @@ public class FeedService {
         if(!comment.getAuthor().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
+
+        System.out.println("🗑️ Deleting comment: " + comment.getId());
         commentRepository.delete(comment);
+
+        System.out.println("✅ Comment deleted.");
     }
 }
