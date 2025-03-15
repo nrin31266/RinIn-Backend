@@ -35,7 +35,8 @@ public class Post {
     LocalDateTime updateDate;
 
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "posts_likes",
             joinColumns = @JoinColumn(name = "post_id"),
@@ -44,10 +45,11 @@ public class Post {
     Set<User> likes;
 
 
+    @JsonIgnore
     @OneToMany(
             mappedBy = "post",
-            fetch = FetchType.EAGER,
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
     )
     List<Comment> comments;
 

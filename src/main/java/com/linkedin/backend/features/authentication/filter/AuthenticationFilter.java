@@ -96,6 +96,10 @@ public class AuthenticationFilter extends HttpFilter {
     }
 
     private boolean isUnsecuredEndpoint(String uri, String method) {
+        if (uri.startsWith("/ws")) {
+            log.info("Event from ws endpoint: " + uri);
+            return true;
+        }
         return switch (method.toUpperCase()) {
             case "GET" -> unsecuredGetEndpoints.contains(uri);
             case "POST" -> unsecuredPostEndpoints.contains(uri);

@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/feed")
@@ -87,6 +88,21 @@ public class FeedController {
                 .data(feedService.addComment(postId, req, user.getId()))
                 .build();
     }
+
+    @GetMapping("/posts/{postId}/comments")
+    public ApiResponse<List<Comment>> getComment(@PathVariable("postId") Long postId) {
+        return ApiResponse.<List<Comment>>builder()
+                .data(feedService.getComment(postId))
+                .build();
+    }
+
+    @GetMapping("/posts/{postId}/likes")
+    public ApiResponse<Set<User>> getLikes(@PathVariable("postId") Long postId) {
+        return ApiResponse.<Set<User>>builder()
+                .data(feedService.getPostLike(postId))
+                .build();
+    }
+
 
     @PutMapping("/posts/{commentId}/comment")
     public ApiResponse<Comment> updateComment(@PathVariable("commentId") Long commentId ,@RequestBody CommentRequest req, @RequestAttribute("authenticatedUser") User user) {

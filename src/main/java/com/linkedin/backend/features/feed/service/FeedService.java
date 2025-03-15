@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -131,5 +132,16 @@ public class FeedService {
         commentRepository.delete(comment);
 
         System.out.println("✅ Comment deleted.");
+    }
+
+    public List<Comment> getComment(Long postId) {
+        Post post = postRepository.findByIdWithComments(postId).orElseThrow(()-> new AppException(ErrorCode.POST_NOT_FOUND));
+        return post.getComments();
+    }
+
+
+    public Set<User> getPostLike(Long postId) {
+        Post post = postRepository.findByIdWithLikes(postId).orElseThrow(()-> new AppException(ErrorCode.POST_NOT_FOUND));
+        return post.getLikes();
     }
 }
