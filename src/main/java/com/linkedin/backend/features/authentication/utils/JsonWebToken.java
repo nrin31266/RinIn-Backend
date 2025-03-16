@@ -36,7 +36,7 @@ public class JsonWebToken {
                 .id(UUID.randomUUID().toString())
                 .subject(user.getEmail())
                 .issuedAt(new Date())
-                .expiration(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
+                .expiration(new Date(Instant.now().plus(8, ChronoUnit.HOURS).toEpochMilli()))
                 .signWith(getKey())
                 .claim("vanin05", "Hello friend, welcome to linkedin")
                 .compact();

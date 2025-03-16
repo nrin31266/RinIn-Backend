@@ -92,7 +92,7 @@ public class FeedController {
     @GetMapping("/posts/{postId}/comments")
     public ApiResponse<List<Comment>> getComment(@PathVariable("postId") Long postId) {
         return ApiResponse.<List<Comment>>builder()
-                .data(feedService.getComment(postId))
+                .data(feedService.getComments(postId))
                 .build();
     }
 

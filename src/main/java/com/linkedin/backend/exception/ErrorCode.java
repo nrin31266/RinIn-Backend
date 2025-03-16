@@ -6,6 +6,9 @@ import org.springframework.http.HttpStatusCode;
 
 @Getter
 public enum ErrorCode {
+    DEFAULT_ERROR(9998, "Default error", HttpStatus.BAD_REQUEST) ,
+
+    // System
     UNCATEGORIZED_EXCEPTION(9999, "Uncategorized exception", HttpStatus.INTERNAL_SERVER_ERROR),
     UNAUTHENTICATED(9001, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     TOKEN_MISSING(9002, "Token is missing", HttpStatus.UNAUTHORIZED),
@@ -42,4 +45,13 @@ public enum ErrorCode {
     final int code;
     final String message;
     private final HttpStatusCode statusCode;
+
+    /**
+     * Format the error message with additional arguments.
+     * @param args The arguments to format the message.
+     * @return A formatted error message.
+     */
+    public String getFormattedMessage(Object... args) {
+        return String.format(this.message, args);
+    }
 }

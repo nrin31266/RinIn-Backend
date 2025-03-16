@@ -11,5 +11,15 @@ import lombok.Setter;
         this.errorCode = errorCode;
     }
 
+    public AppException(ErrorCode errorCode, String customMessage) {
+        super(customMessage);
+        this.errorCode = errorCode;
+    }
+
+    public AppException(String message) {
+        super(message);
+        this.errorCode = ErrorCode.DEFAULT_ERROR;
+    }
+
     final ErrorCode errorCode;
 }
