@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -183,5 +184,13 @@ public class AuthenticationUserService {
         }
 
 
+    }
+
+    public List<User> getUserWithoutAuthenticated(User user) {
+        return authenticationUserRepository.findAllByIdNot(user);
+    }
+
+    public User getUserById(Long id){
+        return authenticationUserRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 }

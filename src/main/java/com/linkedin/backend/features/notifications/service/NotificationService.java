@@ -4,6 +4,8 @@ package com.linkedin.backend.features.notifications.service;
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.model.Comment;
+import com.linkedin.backend.features.message.model.Conversation;
+import com.linkedin.backend.features.message.model.Message;
 import com.linkedin.backend.features.notifications.domain.NotificationType;
 import com.linkedin.backend.features.notifications.model.Notification;
 import com.linkedin.backend.features.notifications.repository.NotificationRepository;
@@ -39,7 +41,7 @@ public class NotificationService {
     }
 
     public void sendLikeNotification(User author, User recipient, Long postId) {
-        if(author.getId().equals(recipient.getId())) {
+        if (author.getId().equals(recipient.getId())) {
             return;
         }
         Notification notification = Notification.builder()
@@ -58,7 +60,7 @@ public class NotificationService {
     }
 
     public void sendCommentNotification(User author, User recipient, Long postId) {
-        if(author.getId().equals(recipient.getId())) {
+        if (author.getId().equals(recipient.getId())) {
             log.info("Blalalalalalldsjldjasdjka");
             return;
         }
@@ -75,5 +77,15 @@ public class NotificationService {
 
     public void sendCommentToPost(Long postId, Comment comment) {
         messagingTemplate.convertAndSend("/topic/comments/" + postId, comment);
+    }
+
+    public void sendConversationToUsers(Long senderId, Long receiverId, Conversation newConversation) {
+        messagingTemplate.convertAndSend("/topic/users/" + senderId + "/conversations", newConversation);
+        messagingTemplate.convertAndSend("/topic/users/" + receiverId + "/conversations", newConversation);
+
+    }
+
+    public void sendMessageToConversation(Long conversationId, Message newMessage) {
+        messagingTemplate.convertAndSend("/topic/conversations/" + conversationId + "/messages", newMessage);
     }
 }

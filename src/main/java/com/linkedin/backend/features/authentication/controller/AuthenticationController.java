@@ -16,6 +16,9 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+
 @RestController
 @RequestMapping("/authentication")
 @RequiredArgsConstructor
@@ -99,6 +102,14 @@ public class AuthenticationController {
         authenticationUserService.deleteUser(user.getId());
         return ApiResponse.builder()
                 .message("Delete user successful")
+                .build();
+    }
+
+    @GetMapping("/users")
+    public ApiResponse<List<User>> getUsersWithoutAuthenticated(@RequestAttribute("authenticatedUser") User user) {
+
+        return ApiResponse.<List<User>>builder()
+                .data(authenticationUserService.getUserWithoutAuthenticated(user))
                 .build();
     }
 
