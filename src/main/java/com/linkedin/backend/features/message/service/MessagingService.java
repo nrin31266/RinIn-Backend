@@ -6,6 +6,8 @@ import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.message.model.Message;
 import com.linkedin.backend.features.message.repository.ConversationRepository;
 import com.linkedin.backend.features.message.repository.MessageRepository;
+import com.linkedin.backend.features.notifications.domain.MessageHandleType;
+import com.linkedin.backend.features.notifications.dto.MessageDto;
 import com.linkedin.backend.features.notifications.repository.NotificationRepository;
 import com.linkedin.backend.features.notifications.service.NotificationService;
 import lombok.AccessLevel;
@@ -67,18 +69,22 @@ public class MessagingService {
         newConversation.setRecipient(receiver);
         newConversation = conversationRepository.save(newConversation);
 
-        Message newMessage = new Message();
-        newMessage.setSender(sender);
-        newMessage.setReceiver(receiver);
-        newMessage.setContent(content);
-        newMessage.setConversation(newConversation);
-        newMessage = messageRepository.save(newMessage);
+        Message newMessage = pvSaveMessage(sender, receiver, content, newConversation);
 
         newConversation.getMessages().add(newMessage);
 
         notificationService.sendConversationToUsers(sender.getId(), receiver.getId(), newConversation);
 
         return newConversation;
+    }
+
+    private Message pvSaveMessage(User sender, User receiver, String content, Conversation conversation) {
+        Message message = new Message();
+        message.setSender(sender);
+        message.setReceiver(receiver);
+        message.setContent(content);
+        message.setConversation(conversation);
+        return messageRepository.save(message);
     }
 
     public Message addMessageToConversation(Long conversationId, User sender, User receiver, String content) {
@@ -89,12 +95,7 @@ public class MessagingService {
         if(!hasAccessToConversation(receiver, conversation)) {
             throw new AppException("Recipient does not belong to this conversation");
         }
-        Message newMessage = new Message();
-        newMessage.setSender(sender);
-        newMessage.setReceiver(receiver);
-        newMessage.setContent(content);
-        newMessage.setConversation(conversation);
-        newMessage = messageRepository.save(newMessage);
+        Message newMessage = pvSaveMessage(sender, receiver, content, conversation);
 
         conversation.getMessages().add(newMessage);
 
@@ -110,6 +111,11 @@ public class MessagingService {
             throw new AppException("You are not authorized to mark message as read this conversation");
         }
         message.setIsRead(true);
-        return messageRepository.save(message);
+        message = messageRepository.save(message);
+
+        notificationService.sendReadToMessage(messageId, MessageDto.builder().type(MessageHandleType.READ).build());
+        return message;
     }
+
+
 }

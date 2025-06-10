@@ -9,5 +9,5 @@ import java.util.Optional;
 public interface AuthenticationUserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
-    List<User> findAllByIdNot(User user);
+    List<User> findAllByIdNot(Long id);
 }

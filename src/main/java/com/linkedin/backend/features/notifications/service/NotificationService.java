@@ -6,7 +6,9 @@ import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.model.Comment;
 import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.message.model.Message;
+import com.linkedin.backend.features.networking.model.Connection;
 import com.linkedin.backend.features.notifications.domain.NotificationType;
+import com.linkedin.backend.features.notifications.dto.MessageDto;
 import com.linkedin.backend.features.notifications.model.Notification;
 import com.linkedin.backend.features.notifications.repository.NotificationRepository;
 import lombok.AccessLevel;
@@ -87,5 +89,29 @@ public class NotificationService {
 
     public void sendMessageToConversation(Long conversationId, Message newMessage) {
         messagingTemplate.convertAndSend("/topic/conversations/" + conversationId + "/messages", newMessage);
+    }
+
+    public void sendReadToMessage(Long messageId, MessageDto messageDto) {
+        messagingTemplate.convertAndSend("/topic/messages/" + messageId, messageDto);
+    }
+
+    public void sendNewInvitationToUser(User author, User recipient, Connection connection) {
+        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/conversations/new", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/conversations/new", connection);
+    }
+
+    public void sendInvitationAcceptedNotification(User recipient, User author, Long id, Connection connection) {
+        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/conversations/accepted", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/conversations/accepted", connection);
+    }
+
+    public void sendInvitationRejectedOrCancelNotification(User recipient, User author, Long connectionId, Connection connection) {
+        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/conversations/rejected", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/conversations/rejected", connection);
+    }
+
+    public void sendConnectionSeenNotification(User recipient, User author, Long connectionId, Connection connection) {
+        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/conversations/seen", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/conversations/seen", connection);
     }
 }

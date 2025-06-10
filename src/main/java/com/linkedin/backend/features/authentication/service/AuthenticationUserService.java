@@ -187,10 +187,14 @@ public class AuthenticationUserService {
     }
 
     public List<User> getUserWithoutAuthenticated(User user) {
-        return authenticationUserRepository.findAllByIdNot(user);
+        return authenticationUserRepository.findAllByIdNot(user.getId());
     }
 
     public User getUserById(Long id){
         return authenticationUserRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    public List<User> findAllByIdNot(Long id) {
+        return authenticationUserRepository.findAllByIdNot(id);
     }
 }
