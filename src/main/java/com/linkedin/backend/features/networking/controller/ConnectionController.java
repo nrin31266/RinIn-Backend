@@ -43,8 +43,8 @@ public class ConnectionController {
                 .build();
     }
     @PutMapping("/connections/{connectionId}/reject")
-    public ApiResponse<Connection> rejectOrCancelConnection(@RequestAttribute("authenticatedUser") User recipient, @PathVariable Long connectionId) {
-        Connection connection = connectionService.rejectOrCancelConnection(recipient, connectionId);
+    public ApiResponse<Connection> rejectOrCancelConnection(@RequestAttribute("authenticatedUser") User user, @PathVariable Long connectionId) {
+        Connection connection = connectionService.rejectOrCancelConnection(user, connectionId);
         return ApiResponse.<Connection>builder()
                 .data(connection)
                 .message("Connection request rejected or cancelled successfully")
@@ -66,5 +66,7 @@ public class ConnectionController {
                 .message("Fetched connection suggestions successfully")
                 .build();
     }
+
+
 
 }

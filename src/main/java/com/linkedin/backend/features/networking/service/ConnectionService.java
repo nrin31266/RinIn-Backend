@@ -10,7 +10,7 @@ public interface ConnectionService {
     List<Connection> getUserConnections(User user, CONNECTION_STATUS status);
     Connection sendConnectionRequest(User author, Long Id);
     Connection acceptConnectionRequest(User recipient, Long connectionId);
-    Connection rejectOrCancelConnection(User recipient,Long connectionId);
+    Connection rejectOrCancelConnection(User user,Long connectionId);
     Connection markConnectionAsSeen(User recipient, Long connectionId);
     List<User> getConnectionSuggestions(User user);
 

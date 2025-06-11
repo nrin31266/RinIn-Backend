@@ -3,6 +3,7 @@ package com.linkedin.backend.features.message.controller;
 import com.linkedin.backend.dto.ApiResponse;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
+import com.linkedin.backend.features.message.dto.CheckConversationDto;
 import com.linkedin.backend.features.message.dto.MessageDto;
 import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.message.model.Message;
@@ -58,5 +59,12 @@ public class MessagingController {
                 .data(messageService.markMessageAsRead(user, messageId))
                 .build();
 
+    }
+    @GetMapping("/conversations/with/{userId}")
+    public ApiResponse<CheckConversationDto> hasConversationWithUser(@RequestAttribute("authenticatedUser") User user, @PathVariable Long userId) {
+        User otherUser = authenticationUserService.getUserById(userId);
+        return ApiResponse.<CheckConversationDto>builder()
+                .data(messageService.hasConversationWithUser(user, otherUser))
+                .build();
     }
 }

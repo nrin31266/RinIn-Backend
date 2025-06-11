@@ -63,7 +63,6 @@ public class NotificationService {
 
     public void sendCommentNotification(User author, User recipient, Long postId) {
         if (author.getId().equals(recipient.getId())) {
-            log.info("Blalalalalalldsjldjasdjka");
             return;
         }
         Notification notification = Notification.builder()
@@ -96,22 +95,22 @@ public class NotificationService {
     }
 
     public void sendNewInvitationToUser(User author, User recipient, Connection connection) {
-        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/conversations/new", connection);
-        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/conversations/new", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/connections/new", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/connections/new", connection);
     }
 
-    public void sendInvitationAcceptedNotification(User recipient, User author, Long id, Connection connection) {
-        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/conversations/accepted", connection);
-        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/conversations/accepted", connection);
+    public void sendInvitationAcceptedNotification(User recipient, User author, Connection connection) {
+        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/connections/accepted", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/connections/accepted", connection);
     }
 
-    public void sendInvitationRejectedOrCancelNotification(User recipient, User author, Long connectionId, Connection connection) {
-        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/conversations/rejected", connection);
-        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/conversations/rejected", connection);
+    public void sendInvitationRejectedOrCancelNotification(User recipient, User author, Connection connection) {
+        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/connections/rejected", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/connections/rejected", connection);
     }
 
-    public void sendConnectionSeenNotification(User recipient, User author, Long connectionId, Connection connection) {
-        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/conversations/seen", connection);
-        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/conversations/seen", connection);
+    public void sendConnectionSeenNotification(User recipient, User author, Connection connection) {
+        messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/connections/seen", connection);
+        messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/connections/seen", connection);
     }
 }

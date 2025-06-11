@@ -2,6 +2,7 @@ package com.linkedin.backend.features.message.service;
 
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
+import com.linkedin.backend.features.message.dto.CheckConversationDto;
 import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.message.model.Message;
 import com.linkedin.backend.features.message.repository.ConversationRepository;
@@ -115,6 +116,21 @@ public class MessagingService {
 
         notificationService.sendReadToMessage(messageId, MessageDto.builder().type(MessageHandleType.READ).build());
         return message;
+    }
+
+    public CheckConversationDto hasConversationWithUser(User user, User otherUser) {
+        if (user.getId().equals(otherUser.getId())) {
+            throw new AppException("You cannot check conversation with yourself");
+        }
+
+        Conversation conversation = conversationRepository.findByAuthorAndRecipientOrRecipientAndAuthor(user, otherUser, user, otherUser)
+                .orElse(null);
+
+        return CheckConversationDto.builder()
+                .isConversationExists(conversation != null)
+                .receiver(otherUser)
+                .conversationId(conversation != null ? conversation.getId() : null)
+                .build();
     }
 
 

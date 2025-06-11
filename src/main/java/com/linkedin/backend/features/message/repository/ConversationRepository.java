@@ -16,4 +16,6 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     @Query("SELECT c FROM Conversation c LEFT JOIN FETCH c.messages WHERE c.id = :id")
     Optional<Conversation> customFindByIdWithMessages(@Param("id") Long id);
 
+
+    Optional<Conversation> findByAuthorAndRecipientOrRecipientAndAuthor(User author, User recipient, User recipient1, User author1);
 }

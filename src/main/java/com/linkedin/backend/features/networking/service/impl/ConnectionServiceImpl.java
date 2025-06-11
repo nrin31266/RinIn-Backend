@@ -65,17 +65,17 @@ public class ConnectionServiceImpl implements ConnectionService {
 
         connection.setStatus(CONNECTION_STATUS.ACCEPTED);
         connection = connectionRepository.save(connection);
-        notificationService.sendInvitationAcceptedNotification(recipient, connection.getAuthor(), connection.getId(), connection);
+        notificationService.sendInvitationAcceptedNotification(recipient, connection.getAuthor(), connection);
 
         return connection;
     }
 
     @Override
-    public Connection rejectOrCancelConnection(User recipient, Long connectionId) {
+    public Connection rejectOrCancelConnection(User user, Long connectionId) {
         Connection connection = getConnectionById(connectionId);
-        ensureUserCanModify(connection, recipient, Role.RELATED);
+        ensureUserCanModify(connection, user, Role.RELATED);
         connectionRepository.delete(connection);
-        notificationService.sendInvitationRejectedOrCancelNotification(recipient, connection.getAuthor(), connectionId, connection);
+        notificationService.sendInvitationRejectedOrCancelNotification(connection.getAuthor(), connection.getRecipient(), connection);
         return connection;
     }
 
@@ -85,7 +85,7 @@ public class ConnectionServiceImpl implements ConnectionService {
         ensureUserCanModify(connection, recipient, ConnectionServiceImpl.Role.RECIPIENT);
         connection.setSeen(true);
         connection = connectionRepository.save(connection);
-        notificationService.sendConnectionSeenNotification(recipient, connection.getAuthor(), connectionId, connection);
+        notificationService.sendConnectionSeenNotification(recipient, connection.getAuthor(), connection);
         return connection;
     }
 
