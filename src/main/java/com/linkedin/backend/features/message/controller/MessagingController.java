@@ -4,6 +4,8 @@ import com.linkedin.backend.dto.ApiResponse;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
 import com.linkedin.backend.features.message.dto.CheckConversationDto;
+import com.linkedin.backend.features.message.dto.ConversationDetailsDto;
+import com.linkedin.backend.features.message.dto.ConversationDto;
 import com.linkedin.backend.features.message.dto.MessageDto;
 import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.message.model.Message;
@@ -24,14 +26,14 @@ public class MessagingController {
     AuthenticationUserService authenticationUserService;
 
     @GetMapping("/conversations")
-    public ApiResponse<List<Conversation>> conversation(@RequestAttribute("authenticatedUser") User user) {
-        return ApiResponse.<List<Conversation>>builder().
+    public ApiResponse<List<ConversationDto>> conversation(@RequestAttribute("authenticatedUser") User user) {
+        return ApiResponse.<List<ConversationDto>>builder().
                 data(messageService.getConversationsOfUser(user))
                 .build();
     }
     @GetMapping("/conversations/{conversationId}")
-    public ApiResponse<Conversation> conversation(@RequestAttribute("authenticatedUser") User user, @PathVariable Long conversationId) {
-        return ApiResponse.<Conversation>builder().
+    public ApiResponse<ConversationDetailsDto> conversation(@RequestAttribute("authenticatedUser") User user, @PathVariable Long conversationId) {
+        return ApiResponse.<ConversationDetailsDto>builder().
                 data(messageService.getConversation(user, conversationId))
                 .build();
     }
@@ -47,18 +49,17 @@ public class MessagingController {
 
     @PostMapping("/conversations/{conversationId}/message")
     public ApiResponse<Message> addMessageToConversation(@RequestAttribute("authenticatedUser") User sender,@PathVariable Long conversationId, @RequestBody MessageDto requestBody) {
-        User receiver = authenticationUserService.getUserById(requestBody.getReceiverId());
         return ApiResponse.<Message>builder()
-                .data(messageService.addMessageToConversation(conversationId, sender, receiver, requestBody.getContent()))
+                .data(messageService.addMessageToConversation(conversationId, sender, requestBody))
                 .build();
     }
 
-    @PutMapping("/conversations/messages/{messageId}")
-    public ApiResponse<Message> markMessageAsRead(@PathVariable Long messageId, @RequestAttribute("authenticatedUser") User user) {
-        return ApiResponse.<Message>builder()
-                .data(messageService.markMessageAsRead(user, messageId))
+    @PutMapping("/conversations/{conversationId}/mark-as-read")
+    public ApiResponse<Void> markConversationAsRead(@PathVariable Long conversationId, @RequestAttribute("authenticatedUser") User user) {
+        messageService.markConversationAsRead(user, conversationId);
+        return ApiResponse.<Void>builder()
+                .message("Conversation marked as read successfully")
                 .build();
-
     }
     @GetMapping("/conversations/with/{userId}")
     public ApiResponse<CheckConversationDto> hasConversationWithUser(@RequestAttribute("authenticatedUser") User user, @PathVariable Long userId) {

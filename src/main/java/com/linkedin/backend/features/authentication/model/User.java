@@ -61,16 +61,15 @@ public class User {
     List<Notification> actedNotifications;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Conversation> conversationsAsAuthor;
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Conversation> conversationsAsOwner;
+
+
 
     @JsonIgnore
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Connection> initiatedConnections;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "recipient", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Conversation> conversationsAsAuthorAsRecipient;
 
 
     @PrePersist

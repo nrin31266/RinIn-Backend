@@ -1,11 +1,9 @@
 package com.linkedin.backend.features.message.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.linkedin.backend.features.authentication.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -15,24 +13,18 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Message {
+public class ConversationParticipant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @ManyToOne
-    User sender;
-
-    @JsonIgnore
-    @ManyToOne(optional = false, cascade = CascadeType.ALL)
+    @ManyToOne(optional = false)
     Conversation conversation;
 
-    String content;
+    @ManyToOne(optional = false)
+    User user;
 
-//    Boolean isRead = false;
+    Integer unreadCount = 0;
 
-    @CreationTimestamp
-    LocalDateTime createdAt;
-
-
+    LocalDateTime lastReadAt;
 }

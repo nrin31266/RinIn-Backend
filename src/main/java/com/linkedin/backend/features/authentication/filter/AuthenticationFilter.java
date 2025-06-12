@@ -51,6 +51,9 @@ public class AuthenticationFilter extends HttpFilter {
     @Override
     protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String origin = request.getHeader("Origin");
+        if (origin == null) {
+            origin = request.getHeader("Host");
+        }
         List<String> allowed = List.of("http://localhost:5173", "http://localhost:3000");
         if (allowed.contains(origin)) {
             response.setHeader("Access-Control-Allow-Origin", origin);

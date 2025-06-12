@@ -24,34 +24,50 @@ public class LoadDatabaseConfiguration {
     @Bean
     CommandLineRunner initDatabase(AuthenticationUserRepository authenticationUserRepository, PostRepository postRepository) {
         return args -> {
-            if (authenticationUserRepository.findByEmail("nrin31266@yopmail.com").isEmpty()) {
-                User authenticationUser = User.builder()
-                        .email("nrin31266@yopmail.com")
-                        .password(encoder.encode("123"))
-                        .build();
-                authenticationUserRepository.save(authenticationUser);
+            if (authenticationUserRepository.findByEmail("rinin1@yopmail.com").isEmpty()) {
                 log.warn("Admin created, please change password!");
-
-                //
-
+//
+//                //
+//
                 List<User> users = createUsers(authenticationUserRepository);
-                createPosts(postRepository, users);
+//                createPosts(postRepository, users);
             }
         };
     }
 
     private List<User> createUsers(AuthenticationUserRepository authenticationUserRepository) {
         List<User> users = List.of(
-                createUser("john.doe@yopmail.com", "john", "John", "Doe", "Software Engineer", "Docker Inc.", "San Francisco, CA",
+                createUser("rinin1@yopmail.com", "123", "RinIn", "1", "Data Scientist", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin2@yopmail.com", "123", "RinIn", "2", "Web Dev", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin3@yopmail.com", "123", "RinIn", "3", "Mobile Dev", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin4@yopmail.com", "123", "RinIn", "4", "AI Engineer", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin5@yopmail.com", "123", "RinIn", "5", "DevOps Engineer", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin6@yopmail.com", "123", "RinIn", "6", "Cloud Engineer", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin7@yopmail.com", "123", "RinIn", "7", "Cybersecurity Specialist", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin8@yopmail.com", "123", "RinIn", "8", "Blockchain Developer", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin9@yopmail.com", "123", "RinIn", "9", "Full Stack Developer", "FPT", "New Delhi, IN",
+                        null),
+                createUser("rinin10@yopmail.com", "123", "RinIn", "10", "Software Architect", "FPT", "New Delhi, IN",
+                        null),
+                createUser("john.doe@yopmail.com", "123", "John", "Doe", "Software Engineer", "Docker Inc.", "San Francisco, CA",
                         "https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
-                createUser("anne.claire@yopmail.com", "anne", "Anne", "Claire", "HR Manager", "eToro", "Paris, Fr",
+                createUser("anne.claire@yopmail.com", "123", "Anne", "Claire", "HR Manager", "eToro", "Paris, Fr",
                         "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=3687&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
-                createUser("arnauld.manner@yopmail.com", "arnauld", "Arnauld", "Manner", "Product Manager", "Arc", "Dakar, SN",
+                createUser("arnauld.manner@yopmail.com", "123", "Arnauld", "Manner", "Product Manager", "Arc", "Dakar, SN",
                         "https://images.unsplash.com/photo-1640960543409-dbe56ccc30e2?q=80&w=2725&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
-                createUser("moussa.diop@yopmail.com", "moussa", "Moussa", "Diop", "Software Engineer", "Orange", "Bordeaux, FR",
+                createUser("moussa.diop@yopmail.com", "123", "Moussa", "Diop", "Software Engineer", "Orange", "Bordeaux, FR",
                         "https://images.unsplash.com/photo-1586297135537-94bc9ba060aa?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
-                createUser("awa.diop@yopmail.com", "awa", "Awa", "Diop", "Data Scientist", "Zoho", "New Delhi, IN",
+                createUser("awa.diop@yopmail.com", "123", "Awa", "Diop", "Data Scientist", "Zoho", "New Delhi, IN",
                         "https://images.unsplash.com/photo-1640951613773-54706e06851d?q=80&w=2967&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")
+
         );
         return authenticationUserRepository.saveAll(users);
     }
