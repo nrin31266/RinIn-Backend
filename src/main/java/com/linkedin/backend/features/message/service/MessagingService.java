@@ -1,5 +1,6 @@
 package com.linkedin.backend.features.message.service;
 
+import com.linkedin.backend.dto.PageableDto;
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
@@ -17,6 +18,10 @@ import com.linkedin.backend.features.notifications.service.NotificationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,6 +177,37 @@ public class MessagingService {
                 .conversationId(existingConversation.map(Conversation::getId).orElse(null))
                 .build();
     }
+
+    public PageableDto<Message> getMessagesBeforeTime(Long conversationId, LocalDateTime beforeTime, int limit, User authenticatedUser) {
+        // Kiểm tra người dùng có tham gia cuộc trò chuyện không
+        boolean isParticipant = conversationParticipantRepository
+                .existsByUserIdAndConversationId(authenticatedUser.getId(), conversationId);
+        if (!isParticipant) {
+            throw new AppException("You are not a participant in this conversation");
+        }
+        // Truy vấn limit + 1 để kiểm tra còn dữ liệu hay không
+        Pageable pageable = PageRequest.of(0, limit + 1, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<Message> messages = messageRepository.findMessagesBeforeTime(conversationId, beforeTime, pageable)
+                .getContent();
+
+        boolean hasMore = messages.size() > limit;
+
+        // Nếu dư 1 thì bỏ phần tử cuối đi (để không trả dư về frontend)
+        if (hasMore) {
+            messages = messages.subList(0, limit);
+        }
+
+        return PageableDto.<Message>builder()
+                .content(messages)
+                .currentSize(messages.size())
+                .hasMore(hasMore)
+                .build();
+    }
+
+
+
+
+
 
 
 }

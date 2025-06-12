@@ -1,6 +1,7 @@
 package com.linkedin.backend.features.message.controller;
 
 import com.linkedin.backend.dto.ApiResponse;
+import com.linkedin.backend.dto.PageableDto;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
 import com.linkedin.backend.features.message.dto.CheckConversationDto;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -66,6 +68,17 @@ public class MessagingController {
         User otherUser = authenticationUserService.getUserById(userId);
         return ApiResponse.<CheckConversationDto>builder()
                 .data(messageService.hasConversationWithUser(user, otherUser))
+                .build();
+    }
+
+    @GetMapping("/conversations/{conversationId}/messages")
+    public ApiResponse<PageableDto<Message>> getMessagesInConversation(@PathVariable Long conversationId,
+                                                                       @RequestAttribute("authenticatedUser") User user,
+                                                                       @RequestParam(value = "beforeTime", required = false) LocalDateTime beforeTime,
+                                                                       @RequestParam(value = "limit", defaultValue = "20") int limit
+    ) {
+        return ApiResponse.<PageableDto<Message>>builder()
+                .data(messageService.getMessagesBeforeTime(conversationId, beforeTime, limit, user))
                 .build();
     }
 }
