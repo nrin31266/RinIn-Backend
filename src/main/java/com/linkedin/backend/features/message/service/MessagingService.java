@@ -62,7 +62,7 @@ public class MessagingService {
         if (!isParticipant) {
             throw new AppException("You are not a participant in this conversation");
         }
-
+        conversationDetailsDto.setParticipants(conversationParticipantRepository.findAllByConversationIdAndUserNot(conversationId, authenticatedUser));
         return conversationDetailsDto;
     }
 
@@ -71,13 +71,13 @@ public class MessagingService {
 
 
     @Transactional
-    public Conversation createConversationAndAddMessage(User sender, User receiver, String content) {
+    public ConversationDto createConversationAndAddMessage(User sender, User receiver, String content) {
         Optional<Conversation> existing = conversationRepository
                 .findOneToOneConversationBetweenUsers(sender, receiver);
         if (existing.isPresent()) {
             throw new AppException("Conversation already exists between these users");
         }
-
+        LocalDateTime now = LocalDateTime.now();
         // 1. Tạo conversation
         Conversation conversation = new Conversation();
         conversation.setCreatedBy(sender);
@@ -88,6 +88,7 @@ public class MessagingService {
         message.setSender(sender);
         message.setConversation(conversation);
         message.setContent(content);
+        message.setCreatedAt(now);
         conversation.setMessages(List.of(message));
 
         // 3. Gán message này là lastMessage
@@ -98,7 +99,7 @@ public class MessagingService {
         senderParticipant.setUser(sender);
         senderParticipant.setConversation(conversation);
         senderParticipant.setUnreadCount(0); // Vì chính mình gửi
-        senderParticipant.setLastReadAt(LocalDateTime.now());
+        senderParticipant.setLastReadAt(now); // Hoặc có thể để null nếu muốn
 
         ConversationParticipant receiverParticipant = new ConversationParticipant();
         receiverParticipant.setUser(receiver);
@@ -110,8 +111,19 @@ public class MessagingService {
         // 5. Gửi thông báo
         notificationService.sendConversationToUsers(sender.getId(), receiver.getId(), conversation);
         notificationService.sendMessageToConversation(conversation.getId(), message);
-        
-        return conversationRepository.save(conversation);
+        conversation = conversationRepository.save(conversation);
+        return ConversationDto.builder()
+                .conversationId(conversation.getId())
+                .isGroup(conversation.getIsGroup())
+                .groupName(conversation.getName())
+                .otherUserId(receiver.getId())
+                .otherUserName(receiver.getLastName())
+                .otherUserProfilePictureUrl(receiver.getProfilePicture())
+                .lastMessageId(message.getId())
+                .lastMessageContent(message.getContent())
+                .lastMessageCreatedAt(message.getCreatedAt())
+                .unreadCount(0) // Vì chính mình gửi
+                .build();
     }
 
 
@@ -125,11 +137,12 @@ public class MessagingService {
         if (!isParticipant) {
             throw new AppException("You are not a participant in this conversation");
         }
-
+        LocalDateTime now = LocalDateTime.now();
         Message newMessage = new Message();
         newMessage.setSender(sender);
         newMessage.setConversation(conversation);
         newMessage.setContent(messageDto.getContent());
+        newMessage.setCreatedAt(now);
 
         // Gán lại lastMessage
         conversation.setLastMessage(newMessage);
@@ -138,7 +151,7 @@ public class MessagingService {
         for (ConversationParticipant participant : conversation.getParticipants()) {
             if (participant.getUser().getId().equals(sender.getId())) {
                 participant.setUnreadCount(0);
-                participant.setLastReadAt(LocalDateTime.now());
+                participant.setLastReadAt(now);
             } else {
                 int currentUnread = participant.getUnreadCount() != null ? participant.getUnreadCount() : 0;
                 participant.setUnreadCount(currentUnread + 1);

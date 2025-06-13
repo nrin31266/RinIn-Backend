@@ -27,11 +27,11 @@ public class Message {
     @ManyToOne(optional = false, cascade = CascadeType.ALL)
     Conversation conversation;
 
+    @Column(length = 65535, columnDefinition = "TEXT")
     String content;
 
 //    Boolean isRead = false;
 
-    @CreationTimestamp
     LocalDateTime createdAt;
 
 

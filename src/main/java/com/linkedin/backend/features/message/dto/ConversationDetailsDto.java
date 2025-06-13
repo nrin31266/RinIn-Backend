@@ -1,11 +1,13 @@
 package com.linkedin.backend.features.message.dto;
 
+import com.linkedin.backend.features.message.model.ConversationParticipant;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -19,6 +21,9 @@ public class ConversationDetailsDto {
     String otherUserFirstName;
     String otherUserLastName;
     String otherUserProfilePictureUrl;
+    String otherUserPosition;
+    String otherUserCompany;
+    List<ConversationParticipant> participants;
 
     public ConversationDetailsDto(
             Long conversationId,
@@ -28,7 +33,9 @@ public class ConversationDetailsDto {
             Long otherUserId,
             String otherUserFirstName,
             String otherUserLastName,
-            String otherUserProfilePictureUrl
+            String otherUserProfilePictureUrl,
+            String otherUserPosition,
+            String otherUserCompany
     ) {
         this.conversationId = conversationId;
         this.isGroup = isGroup;
@@ -38,5 +45,7 @@ public class ConversationDetailsDto {
         this.otherUserFirstName = otherUserFirstName;
         this.otherUserLastName = otherUserLastName;
         this.otherUserProfilePictureUrl = otherUserProfilePictureUrl;
+        this.otherUserPosition = otherUserPosition;
+        this.otherUserCompany = otherUserCompany;
     }
 }

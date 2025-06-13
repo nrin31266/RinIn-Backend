@@ -81,6 +81,14 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
                     CASE WHEN c.isGroup = false THEN (
                         SELECT p.user.profilePicture FROM ConversationParticipant p
                         WHERE p.conversation.id = c.id AND p.user.id <> :userId
+                    ) ELSE null END,
+                    CASE WHEN c.isGroup = false THEN (
+                        SELECT p.user.position FROM ConversationParticipant p
+                        WHERE p.conversation.id = c.id AND p.user.id <> :userId
+                    ) ELSE null END,
+                    CASE WHEN c.isGroup = false THEN (
+                        SELECT p.user.company FROM ConversationParticipant p
+                        WHERE p.conversation.id = c.id AND p.user.id <> :userId
                     ) ELSE null END
                 )
                 FROM Conversation c

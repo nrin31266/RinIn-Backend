@@ -41,9 +41,9 @@ public class MessagingController {
     }
 
     @PostMapping("/conversations")
-    public ApiResponse<Conversation> createConversationAndAddMessage(@RequestBody MessageDto requestBody, @RequestAttribute("authenticatedUser")User sender ) {
+    public ApiResponse<ConversationDto> createConversationAndAddMessage(@RequestBody MessageDto requestBody, @RequestAttribute("authenticatedUser")User sender ) {
         User receiver = authenticationUserService.getUserById(requestBody.getReceiverId());
-        return ApiResponse.<Conversation>builder().
+        return ApiResponse.<ConversationDto>builder().
                 data(messageService.createConversationAndAddMessage(sender,receiver,  requestBody.getContent()))
                 .build();
 

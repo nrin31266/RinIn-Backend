@@ -1,5 +1,6 @@
 package com.linkedin.backend.features.message.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.linkedin.backend.features.authentication.model.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,6 +19,7 @@ public class ConversationParticipant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     Conversation conversation;
 
@@ -25,6 +27,5 @@ public class ConversationParticipant {
     User user;
 
     Integer unreadCount = 0;
-
     LocalDateTime lastReadAt;
 }
