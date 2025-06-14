@@ -4,6 +4,7 @@ package com.linkedin.backend.features.notifications.service;
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.model.Comment;
+import com.linkedin.backend.features.message.dto.ConversationDto;
 import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.message.model.ConversationParticipant;
 import com.linkedin.backend.features.message.model.Message;
@@ -80,14 +81,13 @@ public class NotificationService {
         messagingTemplate.convertAndSend("/topic/comments/" + postId, comment);
     }
 
-    public void sendConversationToUsers(Long senderId, Long receiverId, Conversation newConversation) {
-        messagingTemplate.convertAndSend("/topic/users/" + senderId + "/conversations", newConversation);
-        messagingTemplate.convertAndSend("/topic/users/" + receiverId + "/conversations", newConversation);
 
+    public void sendConversationToReceiver(Long receiverId, ConversationDto conversationDto) {
+        messagingTemplate.convertAndSend("/topic/users/" + receiverId + "/conversations", conversationDto);
     }
 
-    public void sendMessageToConversation(Long conversationId, Message newMessage) {
-        messagingTemplate.convertAndSend("/topic/conversations/" + conversationId + "/messages", newMessage);
+    public void sendMessageToConversation(Long conversationId, Message newMessage, Long receiverUserId) {
+        messagingTemplate.convertAndSend("/topic/users/" + receiverUserId + "/conversations/" + conversationId + "/messages", newMessage);
     }
 
     public void sendReadToConversation(Long conversationId, Long readerUserId, ConversationParticipant participant) {

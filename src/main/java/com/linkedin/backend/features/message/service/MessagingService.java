@@ -108,11 +108,8 @@ public class MessagingService {
         receiverParticipant.setLastReadAt(null); // hoặc set thời điểm rất cũ
         conversation.setParticipants(List.of(senderParticipant, receiverParticipant));
 
-        // 5. Gửi thông báo
-        notificationService.sendConversationToUsers(sender.getId(), receiver.getId(), conversation);
-        notificationService.sendMessageToConversation(conversation.getId(), message);
         conversation = conversationRepository.save(conversation);
-        return ConversationDto.builder()
+        ConversationDto conversationDto= ConversationDto.builder()
                 .conversationId(conversation.getId())
                 .isGroup(conversation.getIsGroup())
                 .groupName(conversation.getName())
@@ -122,8 +119,16 @@ public class MessagingService {
                 .lastMessageId(message.getId())
                 .lastMessageContent(message.getContent())
                 .lastMessageCreatedAt(message.getCreatedAt())
-                .unreadCount(0) // Vì chính mình gửi
+                .lastMessageSenderId(sender.getId())
+                .unreadCount(null) // Không cần đếm unreadCount ở đây vì sẽ tự đếm ở frontend
                 .build();
+        // 5. Gửi thông báo
+        for (ConversationParticipant participant : conversation.getParticipants()) {
+            notificationService.sendConversationToReceiver(participant.getUser().getId(), conversationDto);
+        }
+
+
+        return conversationDto;
     }
 
 
@@ -159,7 +164,38 @@ public class MessagingService {
         }
 
         // Gửi notification
-        notificationService.sendMessageToConversation(conversation.getId(), newMessage);
+        ConversationDto conversationDto = ConversationDto.builder()
+                .conversationId(conversation.getId())
+                .isGroup(conversation.getIsGroup())
+                .groupName(conversation.getName())
+                .otherUserId(conversation.getIsGroup() ? null : conversation.getParticipants().stream()
+                        .filter(p -> !p.getUser().getId().equals(sender.getId()))
+                        .findFirst()
+                        .map(p -> p.getUser().getId())
+                        .orElse(null))
+                .otherUserName(conversation.getIsGroup() ? null : conversation.getParticipants().stream()
+                        .filter(p -> !p.getUser().getId().equals(sender.getId()))
+                        .findFirst()
+                        .map(p -> p.getUser().getLastName())
+                        .orElse(null))
+                .otherUserProfilePictureUrl(conversation.getIsGroup() ? null : conversation.getParticipants().stream()
+                        .filter(p -> !p.getUser().getId().equals(sender.getId()))
+                        .findFirst()
+                        .map(p -> p.getUser().getProfilePicture())
+                        .orElse(null))
+                .lastMessageId(newMessage.getId())
+                .lastMessageContent(newMessage.getContent())
+                .lastMessageCreatedAt(newMessage.getCreatedAt())
+                .lastMessageSenderId(sender.getId())
+                .unreadCount(null) // Ko can can đếm unreadCount ở đây vì se tu dem ben frontend
+                .build();
+
+        for (ConversationParticipant participant : conversation.getParticipants()) {
+            notificationService.sendConversationToReceiver(participant.getUser().getId(), conversationDto);
+            notificationService.sendMessageToConversation(conversation.getId(), newMessage, participant.getUser().getId());
+        }
+
+
 
         // Save message (nếu cascade thì tự lưu conversation & participant)
         return messageRepository.save(newMessage);

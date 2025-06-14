@@ -21,6 +21,7 @@ public class ConversationDto {
     Long lastMessageId;
     String lastMessageContent;
     LocalDateTime lastMessageCreatedAt;
+    Long lastMessageSenderId;
     Integer unreadCount;
 
     public ConversationDto(
@@ -33,6 +34,7 @@ public class ConversationDto {
             Long lastMessageId,
             String lastMessageContent,
             LocalDateTime lastMessageCreatedAt,
+            Long lastMessageSenderId,
             Integer unreadCount
     ) {
         this.conversationId = conversationId;
@@ -44,6 +46,7 @@ public class ConversationDto {
         this.lastMessageId = lastMessageId;
         this.lastMessageContent = lastMessageContent;
         this.lastMessageCreatedAt = lastMessageCreatedAt;
+        this.lastMessageSenderId = lastMessageSenderId;
         this.unreadCount = unreadCount;
     }
 
