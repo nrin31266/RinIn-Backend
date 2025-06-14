@@ -23,6 +23,7 @@ public class ConversationDetailsDto {
     String otherUserProfilePictureUrl;
     String otherUserPosition;
     String otherUserCompany;
+    LocalDateTime myLastReadAt;
     List<ConversationParticipant> participants;
 
     public ConversationDetailsDto(
@@ -35,7 +36,8 @@ public class ConversationDetailsDto {
             String otherUserLastName,
             String otherUserProfilePictureUrl,
             String otherUserPosition,
-            String otherUserCompany
+            String otherUserCompany,
+            LocalDateTime myLastReadAt
     ) {
         this.conversationId = conversationId;
         this.isGroup = isGroup;
@@ -47,5 +49,6 @@ public class ConversationDetailsDto {
         this.otherUserProfilePictureUrl = otherUserProfilePictureUrl;
         this.otherUserPosition = otherUserPosition;
         this.otherUserCompany = otherUserCompany;
+        this.myLastReadAt = myLastReadAt;
     }
 }

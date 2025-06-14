@@ -210,7 +210,16 @@ public class MessagingService {
         participant.setLastReadAt(LocalDateTime.now());
         participant = conversationParticipantRepository.save(participant);
 
-        notificationService.sendReadToConversation(conversationId, user.getId(), participant);
+        notificationService.sendReadToConversation(conversationId, participant);
+        if(!participant.getConversation().getIsGroup()){
+            // Nếu là cuộc trò chuyện 1-1, gửi thông báo cho người kia
+            ConversationParticipant otherParticipant = participant.getConversation().getParticipants().stream()
+                    .filter(p -> !p.getUser().getId().equals(user.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new AppException("Other participant not found"));
+
+            notificationService.sendReadToConversation(conversationId, otherParticipant);
+        }
     }
 
 

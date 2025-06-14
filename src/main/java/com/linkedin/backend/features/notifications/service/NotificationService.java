@@ -90,7 +90,7 @@ public class NotificationService {
         messagingTemplate.convertAndSend("/topic/users/" + receiverUserId + "/conversations/" + conversationId + "/messages", newMessage);
     }
 
-    public void sendReadToConversation(Long conversationId, Long readerUserId, ConversationParticipant participant) {
+    public void sendReadToConversation(Long conversationId, ConversationParticipant participant) {
         messagingTemplate.convertAndSend("/topic/conversations/" + conversationId + "/read", participant);
     }
 

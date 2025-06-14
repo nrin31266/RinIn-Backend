@@ -89,7 +89,10 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
                     CASE WHEN c.isGroup = false THEN (
                         SELECT p.user.company FROM ConversationParticipant p
                         WHERE p.conversation.id = c.id AND p.user.id <> :userId
-                    ) ELSE null END
+                    ) ELSE null END,
+                    ( SELECT cp.lastReadAt
+                      FROM ConversationParticipant cp
+                      WHERE cp.conversation.id = c.id AND cp.user.id = :userId)
                 )
                 FROM Conversation c
                 JOIN c.participants p
