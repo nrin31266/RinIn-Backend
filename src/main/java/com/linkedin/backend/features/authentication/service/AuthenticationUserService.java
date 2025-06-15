@@ -19,6 +19,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -54,6 +55,7 @@ public class AuthenticationUserService {
                             .password(encoder.encode(authenticationUserRequestBody.getPassword()))
                             .emailVerificationTokenExpiryDate(new Date(Instant.now().plus(durationInMinutes, ChronoUnit.MINUTES).toEpochMilli()))
                             .emailVerificationToken(encoder.encode(emailVerificationCode))
+                            .lastLogin(LocalDateTime.now())
                             .build()
             );
 
@@ -76,6 +78,9 @@ public class AuthenticationUserService {
     public AuthenticationUserResponseBody login(AuthenticationUserRequestBody authenticationUserRequestBody) {
         User authenticationUser = authenticationUserRepository.findByEmail(authenticationUserRequestBody.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        authenticationUser.setLastLogin(LocalDateTime.now());
+        authenticationUserRepository.save(authenticationUser);
         if (!encoder.matches(authenticationUserRequestBody.getPassword(), authenticationUser.getPassword())) {
             throw new AppException(ErrorCode.PASSWORD_MISMATCH);
         }
@@ -196,5 +201,11 @@ public class AuthenticationUserService {
 
     public List<User> findAllByIdNot(Long id) {
         return authenticationUserRepository.findAllByIdNot(id);
+    }
+
+    public void updateLastLogin(Long userId) {
+        User user = authenticationUserRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setLastLogin(LocalDateTime.now());
+        authenticationUserRepository.save(user);
     }
 }

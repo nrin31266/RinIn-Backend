@@ -54,7 +54,7 @@ public class AuthenticationFilter extends HttpFilter {
         if (origin == null) {
             origin = request.getHeader("Host");
         }
-        List<String> allowed = List.of("http://localhost:5173", "http://localhost:3000");
+        List<String> allowed = List.of("http://localhost:5173", "http://localhost:3000", "http://192.168.1.6:3000");
         if (allowed.contains(origin)) {
             response.setHeader("Access-Control-Allow-Origin", origin);
         }

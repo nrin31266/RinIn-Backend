@@ -1,6 +1,7 @@
 package com.linkedin.backend.features.notifications.service;
 
 
+import com.linkedin.backend.dto.OnlineUserDto;
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.model.Comment;
@@ -20,7 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -117,5 +120,9 @@ public class NotificationService {
     public void sendConnectionSeenNotification(User recipient, User author, Connection connection) {
         messagingTemplate.convertAndSend("/topic/users/" + recipient.getId() + "/connections/seen", connection);
         messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/connections/seen", connection);
+    }
+
+    public void sendOnlineStatusUpdate(OnlineUserDto onlineUserDto) {
+        messagingTemplate.convertAndSend("/topic/online-status", onlineUserDto);
     }
 }
