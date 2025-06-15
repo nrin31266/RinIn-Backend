@@ -4,10 +4,8 @@ import com.linkedin.backend.dto.PageableDto;
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
-import com.linkedin.backend.features.message.dto.CheckConversationDto;
-import com.linkedin.backend.features.message.dto.ConversationDetailsDto;
-import com.linkedin.backend.features.message.dto.ConversationDto;
-import com.linkedin.backend.features.message.dto.MessageDto;
+import com.linkedin.backend.features.message.dto.*;
+import com.linkedin.backend.features.message.mapper.MessagingMapper;
 import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.message.model.ConversationParticipant;
 import com.linkedin.backend.features.message.model.Message;
@@ -39,7 +37,7 @@ public class MessagingService {
     MessageRepository messageRepository;
     NotificationService notificationService;
     ConversationParticipantRepository conversationParticipantRepository;
-    AuthenticationUserService authenticationUserService;
+    MessagingMapper messagingMapper;
 
 
 
@@ -210,7 +208,9 @@ public class MessagingService {
         participant.setLastReadAt(LocalDateTime.now());
         participant = conversationParticipantRepository.save(participant);
 
-        notificationService.sendReadToConversation(conversationId, participant);
+        ParticipantDto participantDto = messagingMapper.toParticipantDto(participant);
+        participantDto.setConversationId(conversationId);
+        participantDto.setConversationIsGroup(participant.getConversation().getIsGroup());
         if(!participant.getConversation().getIsGroup()){
             // Nếu là cuộc trò chuyện 1-1, gửi thông báo cho người kia
             ConversationParticipant otherParticipant = participant.getConversation().getParticipants().stream()
@@ -218,8 +218,11 @@ public class MessagingService {
                     .findFirst()
                     .orElseThrow(() -> new AppException("Other participant not found"));
 
-            notificationService.sendReadToConversation(conversationId, otherParticipant);
+            participantDto.setOtherParticipantId(otherParticipant.getId());
+            participantDto.setLastReadAtForOtherParticipant(otherParticipant.getLastReadAt());
         }
+        notificationService.sendReadToConversation(conversationId, participantDto);
+        notificationService.sendReadToReader(user.getId(), participantDto);
     }
 
 

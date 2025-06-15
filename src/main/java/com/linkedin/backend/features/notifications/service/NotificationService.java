@@ -5,6 +5,7 @@ import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.model.Comment;
 import com.linkedin.backend.features.message.dto.ConversationDto;
+import com.linkedin.backend.features.message.dto.ParticipantDto;
 import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.message.model.ConversationParticipant;
 import com.linkedin.backend.features.message.model.Message;
@@ -90,8 +91,11 @@ public class NotificationService {
         messagingTemplate.convertAndSend("/topic/users/" + receiverUserId + "/conversations/" + conversationId + "/messages", newMessage);
     }
 
-    public void sendReadToConversation(Long conversationId, ConversationParticipant participant) {
-        messagingTemplate.convertAndSend("/topic/conversations/" + conversationId + "/read", participant);
+    public void sendReadToConversation(Long conversationId, ParticipantDto participantDto) {
+        messagingTemplate.convertAndSend("/topic/conversations/" + conversationId + "/read", participantDto);
+    }
+    public void sendReadToReader(Long readerId, ParticipantDto participantDto) {
+        messagingTemplate.convertAndSend("/topic/users/" + readerId + "/conversations/read", participantDto);
     }
 
 
