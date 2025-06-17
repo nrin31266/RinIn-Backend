@@ -17,6 +17,5 @@ public class PostRequest {
     @NotBlank(message = "POST_CONTENT_IS_REQUIRED")
     String content;
     String picture;
-
-
+    Long postBgId;
 }

@@ -53,6 +53,10 @@ public class Post {
     )
     List<Comment> comments;
 
+    @ManyToOne
+    @JoinColumn(name = "background_id")
+    PostBackground postBg;
+
     @PreUpdate
     public void preUpdate() {
         this.updateDate = LocalDateTime.now();

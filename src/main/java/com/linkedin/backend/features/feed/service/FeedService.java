@@ -11,7 +11,9 @@ import com.linkedin.backend.features.feed.mapper.CommentMapper;
 import com.linkedin.backend.features.feed.mapper.PostMapper;
 import com.linkedin.backend.features.feed.model.Comment;
 import com.linkedin.backend.features.feed.model.Post;
+import com.linkedin.backend.features.feed.model.PostBackground;
 import com.linkedin.backend.features.feed.repository.CommentRepository;
+import com.linkedin.backend.features.feed.repository.PostBackgroundRepository;
 import com.linkedin.backend.features.feed.repository.PostRepository;
 import com.linkedin.backend.features.notifications.service.NotificationService;
 import lombok.AccessLevel;
@@ -37,11 +39,16 @@ public class FeedService {
     CommentRepository commentRepository;
     CommentMapper commentMapper;
     NotificationService notificationService;
+    PostBackgroundRepository postBackgroundRepository;
 
     public Post createPost(PostRequest postRequest, Long authorId) {
         User user = authenticationUserRepository.findById(authorId).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
         Post post = postMapper.toPost(postRequest);
         post.setAuthor(user);
+        if(postRequest.getPostBgId()!=null){
+            PostBackground postBackground = postBackgroundRepository.findById(postRequest.getPostBgId()).get();
+            post.setPostBg(postBackground);
+        }
         return postRepository.save(post);
     }
 
@@ -159,4 +166,9 @@ public class FeedService {
         Post post = postRepository.findByIdWithLikes(postId).orElseThrow(()-> new AppException(ErrorCode.POST_NOT_FOUND));
         return post.getLikes();
     }
+
+    public List<PostBackground> getAllPostBg(){
+        return postBackgroundRepository.findAll();
+    }
+
 }

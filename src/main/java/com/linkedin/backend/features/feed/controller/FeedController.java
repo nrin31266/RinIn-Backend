@@ -7,6 +7,7 @@ import com.linkedin.backend.features.feed.dto.request.PostRequest;
 import com.linkedin.backend.features.feed.dto.response.PostResponse;
 import com.linkedin.backend.features.feed.model.Comment;
 import com.linkedin.backend.features.feed.model.Post;
+import com.linkedin.backend.features.feed.model.PostBackground;
 import com.linkedin.backend.features.feed.service.FeedService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -116,6 +117,13 @@ public class FeedController {
         feedService.removeComment(commentId, user.getId());
         return ApiResponse.<Void>builder()
                 .message("Deleted comment")
+                .build();
+    }
+
+    @GetMapping("/post-bgs")
+    public ApiResponse<List<PostBackground>> getAllPostBg(){
+        return ApiResponse.<List<PostBackground>>builder()
+                .data(feedService.getAllPostBg())
                 .build();
     }
 
