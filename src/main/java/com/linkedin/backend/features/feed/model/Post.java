@@ -21,42 +21,27 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-
     String content;
-    String picture;
-
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)
     User author;
-
     @CreationTimestamp
     LocalDateTime creationDate;
-
     LocalDateTime updateDate;
-
-
+    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    List<PostMedia> postMedia;
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "posts_likes",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    Set<User> likes;
-
-
+    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    Set<React> reacts;
     @JsonIgnore
-    @OneToMany(
-            mappedBy = "post",
-            orphanRemoval = true,
-            fetch = FetchType.LAZY
-    )
-    List<Comment> comments;
-
+    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    Set<Comment> comments;
     @ManyToOne
     @JoinColumn(name = "background_id")
     PostBackground postBg;
-
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    POST_TYPE postType;
     @PreUpdate
     public void preUpdate() {
         this.updateDate = LocalDateTime.now();

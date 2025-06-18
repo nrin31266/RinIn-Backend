@@ -5,7 +5,9 @@ import com.linkedin.backend.features.authentication.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,13 +15,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "comments")
-public class Comment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Entity
+public class React {
+    @jakarta.persistence.Id
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     Long id;
 
-    @JoinColumn(name = "post_id", nullable = false)
+    @jakarta.persistence.ManyToOne
+    User author;
+
+    @JoinColumn(name = "post_id")
     @JsonIgnore
     @ManyToOne
     Post post;
@@ -29,23 +34,19 @@ public class Comment {
     @ManyToOne
     PostMedia postMedia;
 
-    @ManyToOne
-    @JoinColumn(name = "author_id", nullable = false)
-    User author;
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    REACT_TYPE reactType;
 
-    @Column(nullable = false, length = 999)
-    String content;
-
+    @Column(nullable = false)
+    @CreationTimestamp
     LocalDateTime creationDate;
-    LocalDateTime updateDate;
+}
 
-    @PrePersist
-    protected void onCreate() {
-        this.creationDate = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updateDate = LocalDateTime.now();
-    }
+enum REACT_TYPE {
+    LIKE,
+    LOVE,
+    HAHA,
+    WOW,
+    SAD,
+    ANGRY
 }
