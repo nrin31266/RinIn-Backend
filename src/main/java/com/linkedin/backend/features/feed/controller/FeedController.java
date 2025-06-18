@@ -1,10 +1,16 @@
 package com.linkedin.backend.features.feed.controller;
 
+import com.linkedin.backend.dto.ApiResponse;
+import com.linkedin.backend.features.authentication.model.User;
+import com.linkedin.backend.features.feed.dto.PostDto;
+import com.linkedin.backend.features.feed.dto.request.PostRequest;
 import com.linkedin.backend.features.feed.service.FeedServiceImpl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/feed")
@@ -13,12 +19,12 @@ import org.springframework.web.bind.annotation.*;
 public class FeedController {
     FeedServiceImpl feedService;
 
-//    @PostMapping("/posts")
-//    public ApiResponse<Post> createPost(@RequestBody PostRequest postRequest, @RequestAttribute("authenticatedUser") User user) {
-//        return ApiResponse.<Post>builder()
-//                .data(feedService.createPost(postRequest, user.getId()))
-//                .build();
-//    }
+    @PostMapping("/posts")
+    public ApiResponse<PostDto> createPost(@RequestBody PostRequest postRequest, @RequestAttribute("authenticatedUser") User user) {
+        return ApiResponse.<PostDto>builder()
+                .data(feedService.createPost(postRequest, user))
+                .build();
+    }
 //
 //    @PutMapping("/posts/{postId}")
 //    public ApiResponse<Post> updatePost(@PathVariable("postId") Long postId, @RequestBody PostRequest postRequest, @RequestAttribute("authenticatedUser") User user) {
@@ -41,13 +47,13 @@ public class FeedController {
 //                .build();
 //    }
 //
-//    @GetMapping("/posts/user/{userId}")
-//    public ApiResponse<List<Post>> getPostsByUserId(@PathVariable Long userId) {
-//        List<Post> posts = feedService.getPostsByUserId(userId);
-//        return ApiResponse.<List<Post>>builder()
-//                .data(posts)
-//                .build();
-//    }
+    @GetMapping("/posts/user")
+    public ApiResponse<List<PostDto>> getMyPosts(@RequestAttribute("authenticatedUser") User user) {
+        List<PostDto> posts = feedService.getMyPosts(user);
+        return ApiResponse.<List<PostDto>>builder()
+                .data(posts)
+                .build();
+    }
 //
 //    @GetMapping("/posts")
 //    public ApiResponse<List<Post>> getAllPosts() {

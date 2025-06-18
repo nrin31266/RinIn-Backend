@@ -1,6 +1,6 @@
 package com.linkedin.backend.features.message.dto;
 
-import jakarta.persistence.Entity;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

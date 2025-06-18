@@ -42,11 +42,3 @@ public class React {
     LocalDateTime creationDate;
 }
 
-enum REACT_TYPE {
-    LIKE,
-    LOVE,
-    HAHA,
-    WOW,
-    SAD,
-    ANGRY
-}

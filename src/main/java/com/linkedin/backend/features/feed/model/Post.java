@@ -28,7 +28,7 @@ public class Post {
     @CreationTimestamp
     LocalDateTime creationDate;
     LocalDateTime updateDate;
-    @OneToMany(mappedBy = "post", orphanRemoval = true)
+    @OneToMany(mappedBy = "post", orphanRemoval = true, cascade = CascadeType.ALL)
     List<PostMedia> postMedia;
     @JsonIgnore
     @OneToMany(mappedBy = "post", orphanRemoval = true)

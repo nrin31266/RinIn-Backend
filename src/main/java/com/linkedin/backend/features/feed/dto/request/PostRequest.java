@@ -11,6 +11,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import javax.print.attribute.standard.Media;
+import java.util.ArrayList;
 import java.util.List;
 
 @Builder
@@ -23,5 +24,5 @@ public class PostRequest {
     String content;
     Long postBgId;
     POST_TYPE postType;
-    List<PostMedia> postMedias;
+    List<PostMedia> postMedias = new ArrayList<>();
 }

@@ -1,5 +1,6 @@
 package com.linkedin.backend.features.feed.mapper;
 
+import com.linkedin.backend.features.feed.dto.PostDto;
 import com.linkedin.backend.features.feed.dto.request.PostRequest;
 import com.linkedin.backend.features.feed.dto.response.PostResponse;
 import com.linkedin.backend.features.feed.model.Post;
@@ -10,5 +11,5 @@ import org.mapstruct.MappingTarget;
 public interface PostMapper {
     Post toPost(PostRequest postRequest);
     void updatePost(@MappingTarget Post post, PostRequest postRequest);
-    PostResponse toPostResponse(Post post);
+    PostDto toPostDto(Post post);
 }

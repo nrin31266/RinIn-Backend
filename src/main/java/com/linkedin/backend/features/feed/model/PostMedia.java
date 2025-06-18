@@ -31,7 +31,3 @@ public class PostMedia {
     @ManyToOne
     Post post;
 }
-enum MEDIA_TYPE {
-    IMAGE,
-    VIDEO,
-}
