@@ -37,6 +37,7 @@ public class FeedServiceImpl implements FeedService {
     CommentMapper commentMapper;
     NotificationService notificationService;
     PostBackgroundRepository postBackgroundRepository;
+
     @Override
     public PostDto createPost(PostRequest request, User author) {
         Post post = postMapper.toPost(request);
@@ -48,7 +49,7 @@ public class FeedServiceImpl implements FeedService {
                 break;
             case BACKGROUND:
                 post.setPostType(POST_TYPE.BACKGROUND);
-                if(request.getPostBgId() == null) {
+                if (request.getPostBgId() == null) {
                     throw new AppException("Post background ID is required for BACKGROUND post type");
                 }
                 PostBackground postBackground = getPostBackground(request.getPostBgId());
@@ -74,6 +75,7 @@ public class FeedServiceImpl implements FeedService {
 
         return postDto;
     }
+
     private PostBackground getPostBackground(Long postBgId) {
         return postBackgroundRepository.findById(postBgId)
                 .orElseThrow(() -> new AppException("Post background not found"));
@@ -82,15 +84,7 @@ public class FeedServiceImpl implements FeedService {
     @Override
     public List<PostDto> getMyPosts(User user) {
         List<Post> posts = postRepository.findAllByAuthorIdOrderByCreationDate(user.getId());
-        List<Long> postIds = posts.stream().map(Post::getId).toList();
-        List<Object[]> reactionCountsRaw = postRepository.countReactionsByTypeForPosts(postIds);
-        Map<Long, Map<String, Integer>> reactionCountsMap = new HashMap<>();
-        for (Object[] row : reactionCountsRaw) {
-            Long postId = (Long) row[0];
-            String type = (String) row[1];
-            Integer count = ((Number) row[2]).intValue();
-            reactionCountsMap.computeIfAbsent(postId, k -> new HashMap<>()).put(type, count);
-        }
+        Map<Long, Map<String, Integer>> reactionCountsMap = getReactionCounts(posts);
         return posts.stream()
                 .map(post -> {
                     Map<String, Integer> reactCounts = reactionCountsMap.getOrDefault(post.getId(), new HashMap<>());
@@ -100,6 +94,35 @@ public class FeedServiceImpl implements FeedService {
                     return postDto;
                 })
                 .toList();
+    }
+
+    private Map<Long, Map<String, Integer>> getReactionCounts(List<Post> posts) {
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+        List<Object[]> reactionCountsRaw = postRepository.countReactionsByTypeForPosts(postIds);
+        Map<Long, Map<String, Integer>> reactionCountsMap = new HashMap<>();
+        for (Object[] row : reactionCountsRaw) {
+            Long postId = (Long) row[0];
+            String type = (String) row[1];
+            Integer count = ((Number) row[2]).intValue();
+            reactionCountsMap.computeIfAbsent(postId, k -> new HashMap<>()).put(type, count);
+        }
+        return reactionCountsMap;
+    }
+
+    @Override
+    public List<PostDto> getPostsByConnection(User user) {
+        List<Post> posts = postRepository.findPostsByConnection(user.getId());
+        Map<Long, Map<String, Integer>> reactionCountsMap = getReactionCounts(posts);
+        return posts.stream()
+                .map(post -> {
+                    Map<String, Integer> reactCounts = reactionCountsMap.getOrDefault(post.getId(), new HashMap<>());
+                    PostDto postDto = postMapper.toPostDto(post);
+                    postDto.setReactCounts(reactCounts);
+                    postDto.setCommentCount(post.getComments().size());
+                    return postDto;
+                })
+                .toList();
+
     }
 
 
@@ -132,7 +155,6 @@ public class FeedServiceImpl implements FeedService {
     public void updatePost(Long postId, PostRequest request, User user) {
 
     }
-
 
 
 //    public Post createPost(PostRequest postRequest, Long authorId) {

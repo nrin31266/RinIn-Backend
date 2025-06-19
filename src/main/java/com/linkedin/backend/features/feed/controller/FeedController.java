@@ -40,12 +40,12 @@ public class FeedController {
 //                .build();
 //    }
 //
-//    @GetMapping
-//    public ApiResponse<List<Post>> getFeedPost(@RequestAttribute("authenticatedUser") User user) {
-//        return ApiResponse.<List<Post>>builder()
-//                .data(feedService.getFeedPosts(user.getId()))
-//                .build();
-//    }
+    @GetMapping("/posts/connection")
+    public ApiResponse<List<PostDto>> getPostsByConnection(@RequestAttribute("authenticatedUser") User user) {
+        return ApiResponse.<List<PostDto>>builder()
+                .data(feedService.getPostsByConnection(user))
+                .build();
+    }
 //
     @GetMapping("/posts/user")
     public ApiResponse<List<PostDto>> getMyPosts(@RequestAttribute("authenticatedUser") User user) {

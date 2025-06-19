@@ -32,4 +32,16 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Object[]> countReactionsByTypeForPosts(@Param("postIds") List<Long> postIds);
 
     List<Post> findAllByAuthorIdOrderByCreationDate(Long authorId);
+
+    @Query("""
+            SELECT p FROM Post p 
+            WHERE p.author.id IN (
+                SELECT CASE WHEN c.author.id = :userId THEN c.recipient.id ELSE c.author.id END 
+                FROM Connection c
+                WHERE (c.author.id = :userId OR c.recipient.id = :userId)
+                AND c.status = 'ACCEPTED'
+            )
+            ORDER BY p.creationDate DESC
+            """)
+    List<Post> findPostsByConnection(@Param("userId") Long userId);
 }
