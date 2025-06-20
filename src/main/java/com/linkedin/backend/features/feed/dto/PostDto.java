@@ -28,7 +28,7 @@ public class PostDto {
     User author;
     LocalDateTime creationDate;
     LocalDateTime updateDate;
-    List<PostMedia> postMedia;
+    List<PostMedia> postMedias;
     Map<String, Integer> reactCounts;
     Integer commentCount;
     PostBackground postBg;

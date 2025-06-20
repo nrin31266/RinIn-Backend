@@ -29,7 +29,7 @@ public class Post {
     LocalDateTime creationDate;
     LocalDateTime updateDate;
     @OneToMany(mappedBy = "post", orphanRemoval = true, cascade = CascadeType.ALL)
-    List<PostMedia> postMedia;
+    List<PostMedia> postMedias;
     @JsonIgnore
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     Set<React> reacts;

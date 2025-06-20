@@ -11,6 +11,7 @@ import com.linkedin.backend.features.feed.mapper.PostMapper;
 import com.linkedin.backend.features.feed.model.POST_TYPE;
 import com.linkedin.backend.features.feed.model.Post;
 import com.linkedin.backend.features.feed.model.PostBackground;
+import com.linkedin.backend.features.feed.model.PostMedia;
 import com.linkedin.backend.features.feed.repository.CommentRepository;
 import com.linkedin.backend.features.feed.repository.PostBackgroundRepository;
 import com.linkedin.backend.features.feed.repository.PostRepository;
@@ -21,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,7 @@ public class FeedServiceImpl implements FeedService {
                 break;
             case BACKGROUND:
                 post.setPostType(POST_TYPE.BACKGROUND);
+                post.setPostMedias(new ArrayList<>());
                 if (request.getPostBgId() == null) {
                     throw new AppException("Post background ID is required for BACKGROUND post type");
                 }
@@ -57,6 +60,11 @@ public class FeedServiceImpl implements FeedService {
                 break;
             default:
                 throw new AppException("Invalid post type");
+        }
+        if (post.getPostMedias() != null) {
+            for (PostMedia media : post.getPostMedias()) {
+                media.setPost(post);
+            }
         }
 
         post = postRepository.save(post);
@@ -67,7 +75,7 @@ public class FeedServiceImpl implements FeedService {
                 .author(post.getAuthor())
                 .creationDate(post.getCreationDate())
                 .updateDate(post.getUpdateDate())
-                .postMedia(post.getPostMedia())
+                .postMedias(post.getPostMedias())
                 .commentCount(0)
                 .postBg(post.getPostBg())
                 .postType(post.getPostType())
@@ -283,8 +291,9 @@ public class FeedServiceImpl implements FeedService {
 //        return post.getLikes();
 //    }
 //
-//    public List<PostBackground> getAllPostBg(){
-//        return postBackgroundRepository.findAll();
-//    }
+    @Override
+    public List<PostBackground> getAllPostBg(){
+        return postBackgroundRepository.findAll();
+    }
 
 }

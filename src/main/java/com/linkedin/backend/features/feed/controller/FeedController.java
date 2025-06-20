@@ -4,6 +4,7 @@ import com.linkedin.backend.dto.ApiResponse;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.dto.PostDto;
 import com.linkedin.backend.features.feed.dto.request.PostRequest;
+import com.linkedin.backend.features.feed.model.PostBackground;
 import com.linkedin.backend.features.feed.service.FeedServiceImpl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -115,11 +116,11 @@ public class FeedController {
 //                .build();
 //    }
 //
-//    @GetMapping("/post-bgs")
-//    public ApiResponse<List<PostBackground>> getAllPostBg(){
-//        return ApiResponse.<List<PostBackground>>builder()
-//                .data(feedService.getAllPostBg())
-//                .build();
-//    }
+    @GetMapping("/post-bgs")
+    public ApiResponse<List<PostBackground>> getAllPostBg(){
+        return ApiResponse.<List<PostBackground>>builder()
+                .data(feedService.getAllPostBg())
+                .build();
+    }
 
 }

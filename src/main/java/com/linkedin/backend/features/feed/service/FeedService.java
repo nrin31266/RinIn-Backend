@@ -4,6 +4,7 @@ import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.dto.PostDto;
 import com.linkedin.backend.features.feed.dto.request.PostRequest;
 import com.linkedin.backend.features.feed.dto.request.ReactRequest;
+import com.linkedin.backend.features.feed.model.PostBackground;
 
 import java.util.List;
 
@@ -17,4 +18,5 @@ public interface FeedService {
     void updatePost(Long postId, PostRequest request, User user);
     List<PostDto> getMyPosts(User user);
     List<PostDto> getPostsByConnection(User user);
+    public List<PostBackground> getAllPostBg();
 }
