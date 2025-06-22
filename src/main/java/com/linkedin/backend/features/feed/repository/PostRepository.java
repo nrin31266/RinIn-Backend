@@ -36,10 +36,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("""
             SELECT p FROM Post p 
             WHERE p.author.id IN (
-                SELECT CASE WHEN c.author.id = :userId THEN c.recipient.id ELSE c.author.id END 
-                FROM Connection c
-                WHERE (c.author.id = :userId OR c.recipient.id = :userId)
-                AND c.status = 'ACCEPTED'
+                SELECT f.following.id
+                FROM Follow f
+                WHERE f.follower.id = :userId
             )
             ORDER BY p.creationDate DESC
             """)

@@ -3,6 +3,7 @@ package com.linkedin.backend.features.authentication.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.linkedin.backend.features.feed.model.Post;
+import com.linkedin.backend.features.follow.model.Follow;
 import com.linkedin.backend.features.message.model.Conversation;
 import com.linkedin.backend.features.networking.model.Connection;
 import com.linkedin.backend.features.notifications.model.Notification;
@@ -68,11 +69,17 @@ public class User {
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Conversation> conversationsAsOwner;
 
-
-
     @JsonIgnore
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Connection> initiatedConnections;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Follow> followers;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Follow> following;
 
 
 

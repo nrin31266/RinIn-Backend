@@ -3,6 +3,8 @@ package com.linkedin.backend.features.networking.service.impl;
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
+import com.linkedin.backend.features.follow.model.Follow;
+import com.linkedin.backend.features.follow.service.FollowService;
 import com.linkedin.backend.features.networking.domain.CONNECTION_STATUS;
 import com.linkedin.backend.features.networking.model.Connection;
 import com.linkedin.backend.features.networking.repository.ConnectionRepository;
@@ -26,6 +28,7 @@ public class ConnectionServiceImpl implements ConnectionService {
     ConnectionRepository connectionRepository;
     AuthenticationUserService userService;
     NotificationService notificationService;
+    FollowService followService;
 
 
     @Override
@@ -49,7 +52,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 
         notificationService.sendNewInvitationToUser(author, recipient, connection);
 
-
+        followService.followUser(author, recipient.getId());
         return connection;
     }
 
@@ -67,6 +70,7 @@ public class ConnectionServiceImpl implements ConnectionService {
         connection = connectionRepository.save(connection);
         notificationService.sendInvitationAcceptedNotification(recipient, connection.getAuthor(), connection);
 
+        followService.followUser(recipient, connection.getAuthor().getId());
         return connection;
     }
 
@@ -75,9 +79,25 @@ public class ConnectionServiceImpl implements ConnectionService {
         Connection connection = getConnectionById(connectionId);
         ensureUserCanModify(connection, user, Role.RELATED);
         connectionRepository.delete(connection);
-        notificationService.sendInvitationRejectedOrCancelNotification(connection.getAuthor(), connection.getRecipient(), connection);
+
+        notificationService.sendInvitationRejectedOrCancelNotification(
+                connection.getAuthor(), connection.getRecipient(), connection
+        );
+
+        Long authorId = connection.getAuthor().getId();
+        Long recipientId = connection.getRecipient().getId();
+
+        // Luôn unfollow từ người gửi đến người nhận
+        followService.unfollowUser(authorId, recipientId);
+
+        // Nếu là quan hệ đã ACCEPTED thì cần unfollow ngược lại
+        if (connection.getStatus() == CONNECTION_STATUS.ACCEPTED) {
+            followService.unfollowUser(recipientId, authorId);
+        }
+
         return connection;
     }
+
 
     @Override
     public Connection markConnectionAsSeen(User recipient, Long connectionId) {
