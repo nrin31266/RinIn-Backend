@@ -17,6 +17,6 @@ public interface FeedService {
     void deletePost(Long postId, User user);
     void updatePost(Long postId, PostRequest request, User user);
     List<PostDto> getMyPosts(User user);
-    List<PostDto> getPostsByConnection(User user);
+    List<PostDto> getPosts(User user);
     public List<PostBackground> getAllPostBg();
 }

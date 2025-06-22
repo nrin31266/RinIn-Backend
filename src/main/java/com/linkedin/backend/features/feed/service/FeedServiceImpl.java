@@ -118,7 +118,7 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public List<PostDto> getPostsByConnection(User user) {
+    public List<PostDto> getPosts(User user) {
         List<Post> posts = postRepository.findPostsByConnection(user.getId());
         Map<Long, Map<String, Integer>> reactionCountsMap = getReactionCounts(posts);
         return posts.stream()
