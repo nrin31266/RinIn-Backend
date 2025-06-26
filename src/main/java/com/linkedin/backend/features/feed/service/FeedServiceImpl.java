@@ -4,17 +4,13 @@ import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.repository.AuthenticationUserRepository;
 import com.linkedin.backend.features.feed.dto.PostDto;
+import com.linkedin.backend.features.feed.dto.request.CommentRequest;
 import com.linkedin.backend.features.feed.dto.request.PostRequest;
 import com.linkedin.backend.features.feed.dto.request.ReactRequest;
 import com.linkedin.backend.features.feed.mapper.CommentMapper;
 import com.linkedin.backend.features.feed.mapper.PostMapper;
-import com.linkedin.backend.features.feed.model.POST_TYPE;
-import com.linkedin.backend.features.feed.model.Post;
-import com.linkedin.backend.features.feed.model.PostBackground;
-import com.linkedin.backend.features.feed.model.PostMedia;
-import com.linkedin.backend.features.feed.repository.CommentRepository;
-import com.linkedin.backend.features.feed.repository.PostBackgroundRepository;
-import com.linkedin.backend.features.feed.repository.PostRepository;
+import com.linkedin.backend.features.feed.model.*;
+import com.linkedin.backend.features.feed.repository.*;
 import com.linkedin.backend.features.notifications.service.NotificationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +35,8 @@ public class FeedServiceImpl implements FeedService {
     CommentMapper commentMapper;
     NotificationService notificationService;
     PostBackgroundRepository postBackgroundRepository;
+    ReactRepository reactRepository;
+    PostMediaRepository postMediaRepository;
 
     @Override
     public PostDto createPost(PostRequest request, User author) {
@@ -89,6 +87,8 @@ public class FeedServiceImpl implements FeedService {
                 .orElseThrow(() -> new AppException("Post background not found"));
     }
 
+
+
     @Override
     public List<PostDto> getMyPosts(User user) {
         List<Post> posts = postRepository.findAllByAuthorIdOrderByCreationDate(user.getId());
@@ -135,24 +135,134 @@ public class FeedServiceImpl implements FeedService {
 
 
     @Override
-    public List<PostDto> getAllPosts(int page, int size) {
-        return List.of();
-    }
-
-    @Override
-    public PostDto getPostById(Long postId) {
+    public PostDto getPost(Long postId) {
         return null;
     }
 
+    private PostMedia getPostMediaById(Long postMediaId) {
+        return postMediaRepository.findById(postMediaId)
+                .orElseThrow(() -> new AppException("Post media not found with ID: " + postMediaId));
+    }
+    private Comment getCommentById(Long commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new AppException("Comment not found with ID: " + commentId));
+    }
+
     @Override
-    public void reactToPost(Long postId, ReactRequest request, User user) {
+    public void react(ReactRequest request, User authenticatedUser) {
+        Long targetId = request.getTargetId();
+        switch (request.getTargetAction()) {
+            case POST -> {
+                Post post = getPostById(targetId);
+                reactRepository.findByPostIdAndAuthorId(post.getId(), authenticatedUser.getId())
+                        .ifPresentOrElse(react -> {
+                            // If the user has already reacted, update the reaction type
+                            react.setReactType(request.getReactType());
+                            reactRepository.save(react);
+                        }, () -> {
+                            // If the user has not reacted, create a new reaction
+                            React react = new React();
+                            react.setPost(post);
+                            react.setAuthor(authenticatedUser);
+                            react.setReactType(request.getReactType());
+                            reactRepository.save(react);
+                            // Notify the post author about the new reaction
+                        });
+            }
+            case POST_MEDIA -> {
+                PostMedia postMedia = getPostMediaById(targetId);
+                reactRepository.findByPostMediaIdAndAuthorId(postMedia.getId(), authenticatedUser.getId())
+                        .ifPresentOrElse(react -> {
+                            // If the user has already reacted, update the reaction type
+                            react.setReactType(request.getReactType());
+                            reactRepository.save(react);
+                        }, () -> {
+                            // If the user has not reacted, create a new reaction
+                            React react = new React();
+                            react.setPostMedia(postMedia);
+                            react.setAuthor(authenticatedUser);
+                            react.setReactType(request.getReactType());
+                            reactRepository.save(react);
+                            // Notify the post media author about the new reaction
+                        });
+            }
+            case COMMENT -> {
+                Comment comment = getCommentById(targetId);
+                reactRepository.findByCommentIdAndAuthorId(comment.getId(), authenticatedUser.getId())
+                        .ifPresentOrElse(react -> {
+                            // If the user has already reacted, update the reaction type
+                            react.setReactType(request.getReactType());
+                            reactRepository.save(react);
+                        }, () -> {
+                            // If the user has not reacted, create a new reaction
+                            React react = new React();
+                            react.setComment(comment);
+                            react.setAuthor(authenticatedUser);
+                            react.setReactType(request.getReactType());
+                            reactRepository.save(react);
+                            // Notify the comment author about the new reaction
+                        });
+            }
+            default -> {
+                throw new AppException("Not supported target action: " + request.getTargetAction());
+            }
+        }
+    }
+
+    @Override
+    public void unReact(ReactRequest request, User authenticatedUser) {
 
     }
 
     @Override
-    public void commentOnPost(Long postId, String comment, User user) {
+    public void comment(CommentRequest request, String comment, User authenticatedUser) {
 
     }
+
+    @Override
+    public void deleteComment(CommentRequest request, Long commentId, User authenticatedUser) {
+
+    }
+
+    @Override
+    public void updateComment(CommentRequest request, Long commentId, String comment, User authenticatedUser) {
+
+    }
+
+    private Post getPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new AppException("Post not found with ID: " + postId));
+    }
+
+
+//    @Override
+//    public void reactToPost(Long postId, ReactRequest request, User authenticatedUser) {
+//        Post post = getPostById(postId);
+//        reactRepository.findByPostIdAndAuthorId(postId, authenticatedUser.getId())
+//                .ifPresentOrElse(react -> {
+//                    // If the user has already reacted, update the reaction type
+//                    react.setReactType(request.getReactType());
+//                    reactRepository.save(react);
+//                }, () -> {
+//                    // If the user has not reacted, create a new reaction
+//                    React react = new React();
+//                    react.setPost(post);
+//                    react.setAuthor(authenticatedUser);
+//                    react.setReactType(request.getReactType());
+//                    reactRepository.save(react);
+//                    // Notify the post author about the new reaction
+//                });
+//    }
+//
+//    @Override
+//    public void unReactToPost(Long postId, User user) {
+//        Post post = getPostById(postId);
+//        React react = reactRepository.findByPostIdAndAuthorId(postId, user.getId())
+//                .orElseThrow(() -> new AppException("Reaction not found for user on this post"));
+//        reactRepository.delete(react);
+//        // Optionally notify the post author about the reaction removal
+//    }
+
 
     @Override
     public void deletePost(Long postId, User user) {
@@ -165,7 +275,7 @@ public class FeedServiceImpl implements FeedService {
     }
 
 
-//    public Post createPost(PostRequest postRequest, Long authorId) {
+    //    public Post createPost(PostRequest postRequest, Long authorId) {
 //        User user = authenticationUserRepository.findById(authorId).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_FOUND));
 //        Post post = postMapper.toPost(postRequest);
 //        post.setAuthor(user);
@@ -292,7 +402,7 @@ public class FeedServiceImpl implements FeedService {
 //    }
 //
     @Override
-    public List<PostBackground> getAllPostBg(){
+    public List<PostBackground> getAllPostBg() {
         return postBackgroundRepository.findAll();
     }
 

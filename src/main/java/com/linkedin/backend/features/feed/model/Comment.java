@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -35,6 +36,10 @@ public class Comment {
 
     @Column(nullable = false, length = 999)
     String content;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "comment", orphanRemoval = true, cascade = CascadeType.ALL)
+    Set<React> reacts;
 
     LocalDateTime creationDate;
     LocalDateTime updateDate;

@@ -4,6 +4,7 @@ import com.linkedin.backend.dto.ApiResponse;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.dto.PostDto;
 import com.linkedin.backend.features.feed.dto.request.PostRequest;
+import com.linkedin.backend.features.feed.dto.request.ReactRequest;
 import com.linkedin.backend.features.feed.model.PostBackground;
 import com.linkedin.backend.features.feed.service.FeedServiceImpl;
 import lombok.AccessLevel;
@@ -53,6 +54,14 @@ public class FeedController {
         List<PostDto> posts = feedService.getMyPosts(user);
         return ApiResponse.<List<PostDto>>builder()
                 .data(posts)
+                .build();
+    }
+
+    @PostMapping("/posts/react")
+    public ApiResponse<Void> react(@RequestBody ReactRequest rq, @RequestAttribute("authenticatedUser") User user) {
+        feedService.react(rq, user);
+        return ApiResponse.<Void>builder()
+                .message("Reacted to post")
                 .build();
     }
 //

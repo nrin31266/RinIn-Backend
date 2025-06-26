@@ -21,6 +21,9 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+
+    @Lob
+    @Column(columnDefinition = "MEDIUMTEXT")
     String content;
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)

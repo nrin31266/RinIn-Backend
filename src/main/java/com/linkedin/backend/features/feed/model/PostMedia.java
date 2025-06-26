@@ -1,9 +1,7 @@
 package com.linkedin.backend.features.feed.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,6 +15,8 @@ public class PostMedia {
     @jakarta.persistence.Id
     @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     Long id;
+    @Lob
+    @Column(columnDefinition = "MEDIUMTEXT")
     String content;
 
     String mediaUrl;
@@ -27,6 +27,7 @@ public class PostMedia {
     int width;
     Integer duration; // in seconds, only for videos
 
+    @JsonIgnore
     @JoinColumn(name = "post_id", nullable = false)
     @ManyToOne
     Post post;

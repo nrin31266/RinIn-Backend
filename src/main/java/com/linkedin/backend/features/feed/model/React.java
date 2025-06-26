@@ -34,6 +34,11 @@ public class React {
     @ManyToOne
     PostMedia postMedia;
 
+    @JsonIgnore
+    @JoinColumn(name = "comment_id")
+    @ManyToOne
+    Comment comment;
+
     @Enumerated(jakarta.persistence.EnumType.STRING)
     REACT_TYPE reactType;
 

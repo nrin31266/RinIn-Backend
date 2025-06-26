@@ -39,7 +39,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                 SELECT f.following.id
                 FROM Follow f
                 WHERE f.follower.id = :userId
-            )
+            ) OR p.author.id = :userId
             ORDER BY p.creationDate DESC
             """)
     List<Post> findPostsByConnection(@Param("userId") Long userId);

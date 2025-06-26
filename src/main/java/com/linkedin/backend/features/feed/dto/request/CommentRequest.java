@@ -9,5 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentRequest {
+    TARGET_ACTION targetAction;
     String content;
+    Long targetId; // ID of the post or comment being replied to
 }
