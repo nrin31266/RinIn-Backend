@@ -64,6 +64,13 @@ public class FeedController {
                 .message("Reacted to post")
                 .build();
     }
+    @DeleteMapping("/posts/un-react")
+    public ApiResponse<Void> unReact(@RequestBody ReactRequest rq, @RequestAttribute("authenticatedUser") User user) {
+        feedService.unReact(rq, user);
+        return ApiResponse.<Void>builder()
+                .message("Un reacted to post")
+                .build();
+    }
 //
 //    @GetMapping("/posts")
 //    public ApiResponse<List<Post>> getAllPosts() {

@@ -24,12 +24,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 //    Optional<Post> findByIdWithLikes(@Param("postId") Long postId);
 
 
-    @Query("""
-            SELECT r.post.id, r.reactType, COUNT(*) FROM React r 
-            WHERE r.post.id IN :postIds
-            GROUP BY r.post.id, r.reactType
-            """)
-    List<Object[]> countReactionsByTypeForPosts(@Param("postIds") List<Long> postIds);
+
 
     List<Post> findAllByAuthorIdOrderByCreationDate(Long authorId);
 

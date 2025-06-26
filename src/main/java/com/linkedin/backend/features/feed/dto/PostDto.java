@@ -29,7 +29,9 @@ public class PostDto {
     LocalDateTime creationDate;
     LocalDateTime updateDate;
     List<PostMedia> postMedias;
-    Map<String, Integer> reactCounts;
+    Map<REACT_TYPE, Integer> reactCounts;
+    Boolean isReacted;
+    REACT_TYPE myReactType;
     Integer commentCount;
     PostBackground postBg;
     POST_TYPE postType;

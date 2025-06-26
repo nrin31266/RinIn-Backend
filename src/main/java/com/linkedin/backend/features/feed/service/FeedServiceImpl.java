@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -92,44 +93,57 @@ public class FeedServiceImpl implements FeedService {
     @Override
     public List<PostDto> getMyPosts(User user) {
         List<Post> posts = postRepository.findAllByAuthorIdOrderByCreationDate(user.getId());
-        Map<Long, Map<String, Integer>> reactionCountsMap = getReactionCounts(posts);
+        return getPostDtos(posts, user.getId());
+    }
+
+    private List<PostDto> getPostDtos(List<Post> posts, Long userId) {
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+
+        Map<Long, PostDto> postDtoMap = posts.stream()
+                .collect(Collectors.toMap(
+                        Post::getId,
+                        post -> {
+                            PostDto dto = postMapper.toPostDto(post);
+                            dto.setReactCounts(new HashMap<>());
+                            dto.setCommentCount(post.getComments().size());
+                            return dto;
+                        }
+                ));
+
+        // Query dữ liệu react
+        List<Object[]> reactionCountsRaw = reactRepository.countReactionsByTypeForPosts(postIds, userId);
+
+        for (Object[] row : reactionCountsRaw) {
+            Long postId = (Long) row[0];
+            REACT_TYPE type = (REACT_TYPE) row[1];
+            Integer count = ((Number) row[2]).intValue();
+            Boolean isReacted = (Boolean) row[3];
+            REACT_TYPE myReactType = (REACT_TYPE) row[4];
+
+            PostDto postDto = postDtoMap.get(postId);
+            if (postDto == null) continue;
+
+            postDto.getReactCounts().put(type, count);
+
+            // Ghi nhận phản ứng của người dùng (nếu có)
+            if (Boolean.TRUE.equals(isReacted)) {
+                postDto.setIsReacted(true);
+                postDto.setMyReactType(myReactType);
+            }
+        }
+
+        // Duyệt lại danh sách gốc để trả ra danh sách theo đúng thứ tự
         return posts.stream()
-                .map(post -> {
-                    Map<String, Integer> reactCounts = reactionCountsMap.getOrDefault(post.getId(), new HashMap<>());
-                    PostDto postDto = postMapper.toPostDto(post);
-                    postDto.setReactCounts(reactCounts);
-                    postDto.setCommentCount(post.getComments().size());
-                    return postDto;
-                })
+                .map(post -> postDtoMap.get(post.getId()))
                 .toList();
     }
 
-    private Map<Long, Map<String, Integer>> getReactionCounts(List<Post> posts) {
-        List<Long> postIds = posts.stream().map(Post::getId).toList();
-        List<Object[]> reactionCountsRaw = postRepository.countReactionsByTypeForPosts(postIds);
-        Map<Long, Map<String, Integer>> reactionCountsMap = new HashMap<>();
-        for (Object[] row : reactionCountsRaw) {
-            Long postId = (Long) row[0];
-            String type = (String) row[1];
-            Integer count = ((Number) row[2]).intValue();
-            reactionCountsMap.computeIfAbsent(postId, k -> new HashMap<>()).put(type, count);
-        }
-        return reactionCountsMap;
-    }
+
 
     @Override
     public List<PostDto> getPosts(User user) {
         List<Post> posts = postRepository.findPostsByConnection(user.getId());
-        Map<Long, Map<String, Integer>> reactionCountsMap = getReactionCounts(posts);
-        return posts.stream()
-                .map(post -> {
-                    Map<String, Integer> reactCounts = reactionCountsMap.getOrDefault(post.getId(), new HashMap<>());
-                    PostDto postDto = postMapper.toPostDto(post);
-                    postDto.setReactCounts(reactCounts);
-                    postDto.setCommentCount(post.getComments().size());
-                    return postDto;
-                })
-                .toList();
+        return getPostDtos(posts, user.getId());
 
     }
 
@@ -211,7 +225,31 @@ public class FeedServiceImpl implements FeedService {
 
     @Override
     public void unReact(ReactRequest request, User authenticatedUser) {
-
+        Long targetId = request.getTargetId();
+        switch (request.getTargetAction()) {
+            case POST -> {
+                Post post = getPostById(targetId);
+                React react = reactRepository.findByPostIdAndAuthorId(post.getId(), authenticatedUser.getId())
+                        .orElseThrow(() -> new AppException("Reaction not found for user on this post"));
+                reactRepository.delete(react);
+                // Optionally notify the post author about the reaction removal
+            }
+            case POST_MEDIA -> {
+                PostMedia postMedia = getPostMediaById(targetId);
+                React react = reactRepository.findByPostMediaIdAndAuthorId(postMedia.getId(), authenticatedUser.getId())
+                        .orElseThrow(() -> new AppException("Reaction not found for user on this post media"));
+                reactRepository.delete(react);
+                // Optionally notify the post media author about the reaction removal
+            }
+            case COMMENT -> {
+                Comment comment = getCommentById(targetId);
+                React react = reactRepository.findByCommentIdAndAuthorId(comment.getId(), authenticatedUser.getId())
+                        .orElseThrow(() -> new AppException("Reaction not found for user on this comment"));
+                reactRepository.delete(react);
+                // Optionally notify the comment author about the reaction removal
+            }
+            default -> throw new AppException("Not supported target action: " + request.getTargetAction());
+        }
     }
 
     @Override
