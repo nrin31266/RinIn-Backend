@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,4 +33,13 @@ public class PostMedia {
     @JoinColumn(name = "post_id", nullable = false)
     @ManyToOne
     Post post;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "postMedia", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<React> reacts;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "postMedia", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<Comment> comments;
+
 }

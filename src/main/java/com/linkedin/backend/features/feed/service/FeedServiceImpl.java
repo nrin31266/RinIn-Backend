@@ -105,15 +105,17 @@ public class FeedServiceImpl implements FeedService {
                         post -> {
                             PostDto dto = postMapper.toPostDto(post);
                             dto.setReactCounts(new HashMap<>());
-                            dto.setCommentCount(post.getComments().size());
                             return dto;
                         }
                 ));
 
         // Query dữ liệu react
-        List<Object[]> reactionCountsRaw = reactRepository.countReactionsByTypeForPosts(postIds, userId);
+        List<Object[]> reactionCounts = reactRepository.countReactionsByTypeForPosts(postIds, userId);
+        List<Object[]> countComments = commentRepository.countCommentsByPostIds(postIds);
+//        log.info("Reaction counts: {}", reactionCounts);
+//        log.info("Comment counts: {}", countComments);
 
-        for (Object[] row : reactionCountsRaw) {
+        for (Object[] row : reactionCounts) {
             Long postId = (Long) row[0];
             REACT_TYPE type = (REACT_TYPE) row[1];
             Integer count = ((Number) row[2]).intValue();
@@ -129,6 +131,16 @@ public class FeedServiceImpl implements FeedService {
             if (Boolean.TRUE.equals(isReacted)) {
                 postDto.setIsReacted(true);
                 postDto.setMyReactType(myReactType);
+            }
+        }
+        // Ghi nhận số lượng bình luận
+        for (Object[] row : countComments) {
+            Long postId = (Long) row[0];
+            Integer count = ((Number) row[1]).intValue();
+
+            PostDto postDto = postDtoMap.get(postId);
+            if (postDto != null) {
+                postDto.setCommentCount(count);
             }
         }
 
@@ -253,18 +265,58 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public void comment(CommentRequest request, String comment, User authenticatedUser) {
-
+    public void comment(CommentRequest request, User authenticatedUser) {
+        Long targetId = request.getTargetId();
+        switch (request.getTargetAction()) {
+            case POST -> {
+                Post post = getPostById(targetId);
+                Comment newComment = commentMapper.toComment(request);
+                newComment.setPost(post);
+                newComment.setAuthor(authenticatedUser);
+                newComment.setParentComment(null); // No parent comment for top-level comments
+                commentRepository.save(newComment);
+                // Notify the post author about the new comment
+            }
+            case POST_MEDIA -> {
+                PostMedia postMedia = getPostMediaById(targetId);
+                Comment newComment = commentMapper.toComment(request);
+                newComment.setPostMedia(postMedia);
+                newComment.setAuthor(authenticatedUser);
+                commentRepository.save(newComment);
+                // Notify the post media author about the new comment
+            }
+            case COMMENT -> {
+                Comment parentComment = getCommentById(targetId);
+                Comment newComment = commentMapper.toComment(request);
+                newComment.setParentComment(parentComment);
+                newComment.setAuthor(authenticatedUser);
+                commentRepository.save(newComment);
+                // Notify the parent comment author about the new reply
+            }
+            default -> throw new AppException("Not supported target action: " + request.getTargetAction());
+        }
     }
 
     @Override
-    public void deleteComment(CommentRequest request, Long commentId, User authenticatedUser) {
-
+    public void deleteComment(Long commentId, User authenticatedUser) {
+        Comment comment = getCommentById(commentId);
+        if (!comment.getAuthor().getId().equals(authenticatedUser.getId())) {
+            throw new AppException("You are not authorized to delete this comment");
+        }
+        commentRepository.delete(comment);
+        // Optionally notify the post author about the comment deletion
     }
 
     @Override
-    public void updateComment(CommentRequest request, Long commentId, String comment, User authenticatedUser) {
-
+    public void updateComment(CommentRequest request, Long commentId, User authenticatedUser) {
+        Comment existingComment = getCommentById(commentId);
+        if (!existingComment.getAuthor().getId().equals(authenticatedUser.getId())) {
+            throw new AppException("You are not authorized to update this comment");
+        }
+        existingComment.setContent(request.getContent());
+        existingComment.setUpdateDate(null); // Reset update date to current time
+        commentRepository.save(existingComment);
+        // Optionally notify the post author about the comment update
     }
 
     private Post getPostById(Long postId) {

@@ -14,7 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "comments")
+@Entity
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +43,16 @@ public class Comment {
 
     LocalDateTime creationDate;
     LocalDateTime updateDate;
+
+    // Comment cha (nếu có)
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "parent_comment_id")
+    Comment parentComment;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<Comment> replies;
 
     @PrePersist
     protected void onCreate() {

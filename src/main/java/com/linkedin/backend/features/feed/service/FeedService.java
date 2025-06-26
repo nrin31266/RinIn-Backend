@@ -14,9 +14,9 @@ public interface FeedService {
     PostDto getPost(Long postId);
     void react(ReactRequest request, User authenticatedUser);
     void unReact(ReactRequest request ,User authenticatedUser);
-    void comment(CommentRequest request, String comment, User authenticatedUser);
-    void deleteComment(CommentRequest request, Long commentId, User authenticatedUser);
-    void updateComment(CommentRequest request, Long commentId, String comment, User authenticatedUser);
+    void comment(CommentRequest request, User authenticatedUser);
+    void deleteComment(Long commentId, User authenticatedUser);
+    void updateComment(CommentRequest request, Long commentId, User authenticatedUser);
     void deletePost(Long postId, User user);
     void updatePost(Long postId, PostRequest request, User user);
     List<PostDto> getMyPosts(User user);

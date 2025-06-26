@@ -3,6 +3,7 @@ package com.linkedin.backend.features.feed.controller;
 import com.linkedin.backend.dto.ApiResponse;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.feed.dto.PostDto;
+import com.linkedin.backend.features.feed.dto.request.CommentRequest;
 import com.linkedin.backend.features.feed.dto.request.PostRequest;
 import com.linkedin.backend.features.feed.dto.request.ReactRequest;
 import com.linkedin.backend.features.feed.model.PostBackground;
@@ -69,6 +70,27 @@ public class FeedController {
         feedService.unReact(rq, user);
         return ApiResponse.<Void>builder()
                 .message("Un reacted to post")
+                .build();
+    }
+    @PostMapping("/posts/comment")
+    public ApiResponse<Void> comment(@RequestBody CommentRequest rq, @RequestAttribute("authenticatedUser") User user) {
+        feedService.comment(rq, user);
+        return ApiResponse.<Void>builder()
+                .message("Commented on post")
+                .build();
+    }
+    @DeleteMapping("/posts/comment/{commentId}")
+    public ApiResponse<Void> deleteComment(@PathVariable("commentId") Long commentId, @RequestAttribute("authenticatedUser") User user) {
+        feedService.deleteComment(commentId, user);
+        return ApiResponse.<Void>builder()
+                .message("Deleted comment")
+                .build();
+    }
+    @PutMapping("/posts/comment/{commentId}")
+    public ApiResponse<Void> updateComment(@PathVariable("commentId") Long commentId, @RequestBody CommentRequest rq, @RequestAttribute("authenticatedUser") User user) {
+        feedService.updateComment(rq, commentId, user);
+        return ApiResponse.<Void>builder()
+                .message("Updated comment")
                 .build();
     }
 //
