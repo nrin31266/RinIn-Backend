@@ -16,4 +16,6 @@ public class CommentRequest {
     String content;
     @NotBlank
     Long targetId; // ID of the post or comment being replied to
+
+    Long repliedToId; // ID of the user being replied to, if applicable
 }

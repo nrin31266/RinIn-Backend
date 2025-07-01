@@ -2,6 +2,7 @@ package com.linkedin.backend.features.authentication.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.linkedin.backend.features.feed.model.Comment;
 import com.linkedin.backend.features.feed.model.Post;
 import com.linkedin.backend.features.follow.model.Follow;
 import com.linkedin.backend.features.message.model.Conversation;
@@ -80,7 +81,6 @@ public class User {
     @JsonIgnore
     @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Follow> following;
-
 
 
     @PrePersist

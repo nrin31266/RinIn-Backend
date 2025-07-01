@@ -54,6 +54,14 @@ public class Comment {
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Comment> replies;
 
+
+    @JoinColumn(name = "replied_to_id")
+    @ManyToOne
+    User repliedTo; // User being replied to, if applicable
+
+    @Enumerated(EnumType.STRING)
+    COMMENT_TYPE type;
+
     @PrePersist
     protected void onCreate() {
         this.creationDate = LocalDateTime.now();

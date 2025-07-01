@@ -28,6 +28,7 @@ public class PostMedia {
     int height;
     int width;
     Integer duration; // in seconds, only for videos
+    String thumbnailUrl; // only for videos
 
     @JsonIgnore
     @JoinColumn(name = "post_id", nullable = false)

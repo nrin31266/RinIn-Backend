@@ -3,10 +3,13 @@ package com.linkedin.backend.features.feed.service;
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.repository.AuthenticationUserRepository;
+import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
+import com.linkedin.backend.features.feed.dto.CommentDto;
 import com.linkedin.backend.features.feed.dto.PostDto;
 import com.linkedin.backend.features.feed.dto.request.CommentRequest;
 import com.linkedin.backend.features.feed.dto.request.PostRequest;
 import com.linkedin.backend.features.feed.dto.request.ReactRequest;
+import com.linkedin.backend.features.feed.dto.request.TARGET_ACTION;
 import com.linkedin.backend.features.feed.mapper.CommentMapper;
 import com.linkedin.backend.features.feed.mapper.PostMapper;
 import com.linkedin.backend.features.feed.model.*;
@@ -17,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +42,7 @@ public class FeedServiceImpl implements FeedService {
     PostBackgroundRepository postBackgroundRepository;
     ReactRepository reactRepository;
     PostMediaRepository postMediaRepository;
+    AuthenticationUserService authenticationUserService;
 
     @Override
     public PostDto createPost(PostRequest request, User author) {
@@ -265,16 +270,18 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public void comment(CommentRequest request, User authenticatedUser) {
+    public CommentDto comment(CommentRequest request, User authenticatedUser) {
         Long targetId = request.getTargetId();
+        Comment comment;
         switch (request.getTargetAction()) {
             case POST -> {
                 Post post = getPostById(targetId);
                 Comment newComment = commentMapper.toComment(request);
                 newComment.setPost(post);
                 newComment.setAuthor(authenticatedUser);
+                newComment.setType(COMMENT_TYPE.POST);
                 newComment.setParentComment(null); // No parent comment for top-level comments
-                commentRepository.save(newComment);
+                comment= commentRepository.save(newComment);
                 // Notify the post author about the new comment
             }
             case POST_MEDIA -> {
@@ -282,19 +289,39 @@ public class FeedServiceImpl implements FeedService {
                 Comment newComment = commentMapper.toComment(request);
                 newComment.setPostMedia(postMedia);
                 newComment.setAuthor(authenticatedUser);
-                commentRepository.save(newComment);
+                newComment.setType(COMMENT_TYPE.POST_MEDIA);
+                comment = commentRepository.save(newComment);
                 // Notify the post media author about the new comment
             }
             case COMMENT -> {
+                User repliedTo = authenticationUserService.getUserById(request.getRepliedToId());
+                int level = 1; // Default level
                 Comment parentComment = getCommentById(targetId);
+                Map<Integer, Comment> parentCommentMap = new HashMap<>();
+                parentCommentMap.put(level, parentComment);
+                while (parentComment.getParentComment() != null) {
+                    level++;
+                    parentComment = parentComment.getParentComment();
+                    parentCommentMap.put(level, parentComment);
+                }
+                // Neu lon hon 3 thi dua no ve 3
+                if (level > 3) {
+                    parentComment = parentCommentMap.get(3);
+                }else {
+                    parentComment = parentCommentMap.get(1);
+                }
                 Comment newComment = commentMapper.toComment(request);
                 newComment.setParentComment(parentComment);
+                newComment.setRepliedTo(repliedTo);
+                newComment.setPost(parentComment.getPost());
+                newComment.setType(COMMENT_TYPE.REPLY);
                 newComment.setAuthor(authenticatedUser);
-                commentRepository.save(newComment);
+                comment = commentRepository.save(newComment);
                 // Notify the parent comment author about the new reply
             }
             default -> throw new AppException("Not supported target action: " + request.getTargetAction());
         }
+        return commentMapper.toCommentDto(comment);
     }
 
     @Override
@@ -308,15 +335,53 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
-    public void updateComment(CommentRequest request, Long commentId, User authenticatedUser) {
+    public Comment updateComment(CommentRequest request, Long commentId, User authenticatedUser) {
         Comment existingComment = getCommentById(commentId);
         if (!existingComment.getAuthor().getId().equals(authenticatedUser.getId())) {
             throw new AppException("You are not authorized to update this comment");
         }
         existingComment.setContent(request.getContent());
         existingComment.setUpdateDate(null); // Reset update date to current time
-        commentRepository.save(existingComment);
+        return commentRepository.save(existingComment);
         // Optionally notify the post author about the comment update
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<CommentDto> getComments(TARGET_ACTION targetAction, Long targetId, User authenticatedUser) {
+        List<Comment> comments;
+        switch (targetAction) {
+            case POST -> {
+                Post post = getPostById(targetId);
+                comments = commentRepository.findByPostIdAndTypeIsPost(post.getId());
+            }
+            case POST_MEDIA -> {
+                PostMedia postMedia = getPostMediaById(targetId);
+                comments = commentRepository.findByPostMediaIdAndTypeIsPostMedia(postMedia.getId());
+            }
+            case COMMENT -> {
+                Comment parentComment = getCommentById(targetId);
+                comments = commentRepository.findByParentCommentIdAndTypeIsReply(parentComment.getId());
+            }
+            default -> throw new AppException("Not supported target action: " + targetAction);
+        }
+
+        // Map comments to CommentDto
+        List<CommentDto> commentDtos = comments.stream().map(commentMapper::toCommentDto).toList();
+        List<Long> commentIds = commentDtos.stream().map(CommentDto::getId).toList();
+        List<Object[]> commentCounts = commentRepository.countRepliesByCommentIds(commentIds);
+        // Map comment counts to CommentDto
+        Map<Long, Integer> commentCountMap = new HashMap<>();
+        for (Object[] row : commentCounts) {
+            Long commentId = (Long) row[0];
+            Integer count = ((Number) row[1]).intValue();
+            commentCountMap.put(commentId, count);
+        }
+        for (CommentDto commentDto : commentDtos) {
+            Integer count = commentCountMap.get(commentDto.getId());
+            commentDto.setRepliedCount(count != null ? count : 0);
+        }
+        return commentDtos;
     }
 
     private Post getPostById(Long postId) {

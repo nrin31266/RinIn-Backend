@@ -2,10 +2,13 @@ package com.linkedin.backend.features.feed.controller;
 
 import com.linkedin.backend.dto.ApiResponse;
 import com.linkedin.backend.features.authentication.model.User;
+import com.linkedin.backend.features.feed.dto.CommentDto;
 import com.linkedin.backend.features.feed.dto.PostDto;
 import com.linkedin.backend.features.feed.dto.request.CommentRequest;
 import com.linkedin.backend.features.feed.dto.request.PostRequest;
 import com.linkedin.backend.features.feed.dto.request.ReactRequest;
+import com.linkedin.backend.features.feed.dto.request.TARGET_ACTION;
+import com.linkedin.backend.features.feed.model.Comment;
 import com.linkedin.backend.features.feed.model.PostBackground;
 import com.linkedin.backend.features.feed.service.FeedServiceImpl;
 import lombok.AccessLevel;
@@ -73,10 +76,11 @@ public class FeedController {
                 .build();
     }
     @PostMapping("/posts/comment")
-    public ApiResponse<Void> comment(@RequestBody CommentRequest rq, @RequestAttribute("authenticatedUser") User user) {
-        feedService.comment(rq, user);
-        return ApiResponse.<Void>builder()
+    public ApiResponse<CommentDto> comment(@RequestBody CommentRequest rq, @RequestAttribute("authenticatedUser") User user) {
+
+        return ApiResponse.<CommentDto>builder()
                 .message("Commented on post")
+                .data(feedService.comment(rq, user))
                 .build();
     }
     @DeleteMapping("/posts/comment/{commentId}")
@@ -91,6 +95,13 @@ public class FeedController {
         feedService.updateComment(rq, commentId, user);
         return ApiResponse.<Void>builder()
                 .message("Updated comment")
+                .build();
+    }
+    @GetMapping("/comments")
+    public ApiResponse<List<CommentDto>> getComments( @RequestParam(value = "targetAction") TARGET_ACTION targetAction,
+                                                      @RequestParam(value = "targetId") Long targetId, @RequestAttribute("authenticatedUser") User user) {
+        return ApiResponse.<List<CommentDto>>builder()
+                .data(feedService.getComments(targetAction, targetId, user))
                 .build();
     }
 //
