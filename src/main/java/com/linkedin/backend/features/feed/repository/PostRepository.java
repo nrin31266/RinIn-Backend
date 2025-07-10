@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByAuthorId(Long authorId);
@@ -29,7 +27,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByAuthorIdOrderByCreationDate(Long authorId);
 
     @Query("""
-            SELECT p FROM Post p 
+            SELECT p FROM Post p
             WHERE p.author.id IN (
                 SELECT f.following.id
                 FROM Follow f
@@ -37,5 +35,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             ) OR p.author.id = :userId
             ORDER BY p.creationDate DESC
             """)
-    List<Post> findPostsByConnection(@Param("userId") Long userId);
+    List<Post> findPosts(@Param("userId") Long userId);
+
+    @Query("""
+    SELECT p
+    FROM Post p
+    WHERE p.author.id = :userId
+    ORDER BY p.creationDate DESC
+    """)
+    List<Post> findPostsByUserId(@Param("userId") Long userId);
 }

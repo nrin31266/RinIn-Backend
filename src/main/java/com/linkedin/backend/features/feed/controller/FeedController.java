@@ -53,7 +53,7 @@ public class FeedController {
                 .build();
     }
 //
-    @GetMapping("/posts/user")
+    @GetMapping("/posts/my-post")
     public ApiResponse<List<PostDto>> getMyPosts(@RequestAttribute("authenticatedUser") User user) {
         List<PostDto> posts = feedService.getMyPosts(user);
         return ApiResponse.<List<PostDto>>builder()
@@ -83,14 +83,14 @@ public class FeedController {
                 .data(feedService.comment(rq, user))
                 .build();
     }
-    @DeleteMapping("/posts/comment/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     public ApiResponse<Void> deleteComment(@PathVariable("commentId") Long commentId, @RequestAttribute("authenticatedUser") User user) {
         feedService.deleteComment(commentId, user);
         return ApiResponse.<Void>builder()
                 .message("Deleted comment")
                 .build();
     }
-    @PutMapping("/posts/comment/{commentId}")
+    @PutMapping("/comments/{commentId}")
     public ApiResponse<Void> updateComment(@PathVariable("commentId") Long commentId, @RequestBody CommentRequest rq, @RequestAttribute("authenticatedUser") User user) {
         feedService.updateComment(rq, commentId, user);
         return ApiResponse.<Void>builder()
@@ -102,6 +102,14 @@ public class FeedController {
                                                       @RequestParam(value = "targetId") Long targetId, @RequestAttribute("authenticatedUser") User user) {
         return ApiResponse.<List<CommentDto>>builder()
                 .data(feedService.getComments(targetAction, targetId, user))
+                .build();
+    }
+
+    @GetMapping("/posts/users/{id}")
+    public ApiResponse<List<PostDto>> getPostOfUser(@RequestAttribute("authenticatedUser") User auth, @PathVariable("id") Long id) {
+        List<PostDto> posts = feedService.getPostByUserId(id, auth);
+        return ApiResponse.<List<PostDto>>builder()
+                .data(posts)
                 .build();
     }
 //

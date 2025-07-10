@@ -170,6 +170,11 @@ public class AuthenticationUserService {
         return user;
     }
 
+    public User updateProfileAbout(User user, User authenticatedUser){
+        authenticatedUser.setAbout(user.getAbout());
+        return authenticationUserRepository.save(authenticatedUser);
+    }
+
     private boolean isProfileComplete(User user) {
         return user.getLastName() != null && !user.getLastName().isEmpty()
                && user.getFirstName() != null && !user.getFirstName().isEmpty()

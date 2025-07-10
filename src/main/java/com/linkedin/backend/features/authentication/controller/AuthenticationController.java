@@ -97,17 +97,30 @@ public class AuthenticationController {
                 .build();
     }
 
+    @PutMapping("/profile/about")
+    public ApiResponse<User> updateProfileAbout(@RequestBody User rq, @RequestAttribute("authenticatedUser") User authenticatedUser) {
+        return ApiResponse.<User>builder()
+                .data(authenticationUserService.updateProfileAbout(rq, authenticatedUser))
+                .build();
+    }
+
+    @GetMapping("/profile/{id}")
+    public ApiResponse<User> getUserById(@PathVariable("id") Long id){
+        return ApiResponse.<User>builder()
+                .data(authenticationUserService.getUserById(id))
+                .build();
+    }
+
     @DeleteMapping("/user/delete")
-    public ApiResponse deleteUser(@RequestAttribute("authenticatedUser") User user) {
+    public ApiResponse<Void> deleteUser(@RequestAttribute("authenticatedUser") User user) {
         authenticationUserService.deleteUser(user.getId());
-        return ApiResponse.builder()
+        return ApiResponse.<Void>builder()
                 .message("Delete user successful")
                 .build();
     }
 
     @GetMapping("/users")
     public ApiResponse<List<User>> getUsersWithoutAuthenticated(@RequestAttribute("authenticatedUser") User user) {
-
         return ApiResponse.<List<User>>builder()
                 .data(authenticationUserService.getUserWithoutAuthenticated(user))
                 .build();

@@ -22,7 +22,9 @@ public class WebSocketConnectListener  implements ApplicationListener<SessionCon
     @Override
     public void onApplicationEvent(SessionConnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        String userId = accessor.getFirstNativeHeader("userId");
+        String userId = (String) accessor.getSessionAttributes().get("userId");
+
+
         if (userId != null && !userId.isEmpty()) {
             onlineStatusService.markOnline(userId);
             notificationService.sendOnlineStatusUpdate(
@@ -32,7 +34,6 @@ public class WebSocketConnectListener  implements ApplicationListener<SessionCon
                             .lastOnline(null)
                             .build()
             );
-            log.warn("User {} connected", userId);
         }
     }
 }

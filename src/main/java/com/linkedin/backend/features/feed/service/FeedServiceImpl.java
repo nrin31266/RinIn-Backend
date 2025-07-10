@@ -159,9 +159,16 @@ public class FeedServiceImpl implements FeedService {
 
     @Override
     public List<PostDto> getPosts(User user) {
-        List<Post> posts = postRepository.findPostsByConnection(user.getId());
+        List<Post> posts = postRepository.findPosts(user.getId());
         return getPostDtos(posts, user.getId());
 
+    }
+
+    @Override
+    public List<PostDto> getPostByUserId(Long id, User authenticatedUser) {
+        User user = authenticationUserService.getUserById(id);
+        List<Post> posts = postRepository.findPostsByUserId(user.getId());
+        return getPostDtos(posts, authenticatedUser.getId());
     }
 
 

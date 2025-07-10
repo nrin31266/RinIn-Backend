@@ -11,6 +11,7 @@ import com.linkedin.backend.features.notifications.model.Notification;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -48,10 +49,15 @@ public class User {
     String position;
     String location;
 
+    String about;
+
     Boolean profileComplete;
     String profilePicture;
 
     LocalDateTime lastLogin;
+
+    @CreationTimestamp
+    LocalDateTime creationDate;
 
 
     @JsonIgnore
@@ -87,5 +93,6 @@ public class User {
     public void prePersist() {
         emailVerified = false;
         profileComplete = false;
+
     }
 }

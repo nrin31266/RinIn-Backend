@@ -25,5 +25,6 @@ public interface FeedService {
     void updatePost(Long postId, PostRequest request, User user);
     List<PostDto> getMyPosts(User user);
     List<PostDto> getPosts(User user);
+    List<PostDto> getPostByUserId(Long id, User authenticatedUser);
     List<PostBackground> getAllPostBg();
 }
