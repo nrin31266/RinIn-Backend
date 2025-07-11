@@ -107,50 +107,49 @@ public class AuthenticationUserService {
     }
 
     public AuthenticationUserResponseBody googleLoginOrRegister(OauthLoginRequest request) {
-        String redirectUri = "http://localhost:3000/auth/"+ request.getPage();
-        ExchangeCodeForTokenResponse exchangeCodeForTokenResponse = oauthClient.exchangeCodeForToken(
-                ExchangeCodeForTokenRequest.builder()
-                        .code(request.getCode())
-                        .client_id(oauthClientId)
-                        .client_secret(oauthClientSecret)
-                        .redirect_uri(redirectUri)
-                        .grant_type("authorization_code")
-                        .build()
-        );
+        log.info("Google login or register request: {}", request);
+        try{
+            String redirectUri = "http://localhost:3000/auth/"+ request.getPage();
+            ExchangeCodeForTokenResponse exchangeCodeForTokenResponse = oauthClient.exchangeCodeForToken(
+                    ExchangeCodeForTokenRequest.builder()
+                            .code(request.getCode())
+                            .client_id(oauthClientId)
+                            .client_secret(oauthClientSecret)
+                            .redirect_uri(redirectUri)
+                            .grant_type("authorization_code")
+                            .build()
+            );
 
-        Claims claims = jsonWebToken.getClaimsFromGoogleOauthIdToken(exchangeCodeForTokenResponse.getId_token());
+            Claims claims = jsonWebToken.getClaimsFromGoogleOauthIdToken(exchangeCodeForTokenResponse.getId_token());
 
-        String email = claims.get("email", String.class);
-        User user = null;
-        try {
-            user = getUser(email);
-        }catch (Exception e) {
-            // User not found, will create a new one
-            log.warn("User not found with email: {}, will create a new one", email);
-        }
-        if (user == null) {
-            user = User.builder()
-                    .email(email)
-                    .firstName(claims.get("given_name", String.class))
-                    .lastName(claims.get("family_name", String.class))
-                    .profilePicture(claims.get("picture", String.class))
-                    .emailVerified(true)
-                    .lastLogin(LocalDateTime.now())
-                    .creationDate(LocalDateTime.now())
-                    .password(encoder.encode(oneTimePasswordGenerator.generateOTP())) // Temporary password
+            String email = claims.get("email", String.class);
+            User user = authenticationUserRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                user = User.builder()
+                        .email(email)
+                        .firstName(claims.get("given_name", String.class))
+                        .lastName(claims.get("family_name", String.class))
+                        .profilePicture(claims.get("picture", String.class))
+                        .emailVerified(true)
+                        .lastLogin(LocalDateTime.now())
+                        .creationDate(LocalDateTime.now())
+                        .password(encoder.encode(oneTimePasswordGenerator.generateOTP())) // Temporary password
+                        .build();
+                user = authenticationUserRepository.save(user);
+            }else{
+                user.setLastLogin(LocalDateTime.now());
+                user.setProfilePicture(claims.get("picture", String.class));
+                user.setFirstName(claims.get("given_name", String.class));
+                user.setLastName(claims.get("family_name", String.class));
+                user = authenticationUserRepository.save(user);
+            }
+
+            return AuthenticationUserResponseBody.builder()
+                    .token(jsonWebToken.generateToken(user))
                     .build();
-            user = authenticationUserRepository.save(user);
-        }else{
-            user.setLastLogin(LocalDateTime.now());
-            user.setProfilePicture(claims.get("picture", String.class));
-            user.setFirstName(claims.get("given_name", String.class));
-            user.setLastName(claims.get("family_name", String.class));
-            user = authenticationUserRepository.save(user);
+        }catch (Exception e) {
+            throw new AppException("Error during Google login or registration: "+ e.getMessage());
         }
-
-        return AuthenticationUserResponseBody.builder()
-                .token(jsonWebToken.generateToken(user))
-                .build();
     }
 
     public void sendEmailVerifyToken(String email) {
