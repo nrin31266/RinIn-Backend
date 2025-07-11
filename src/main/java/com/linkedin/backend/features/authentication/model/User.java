@@ -91,8 +91,6 @@ public class User {
 
     @PrePersist
     public void prePersist() {
-        emailVerified = false;
         profileComplete = false;
-
     }
 }

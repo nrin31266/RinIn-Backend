@@ -2,10 +2,7 @@ package com.linkedin.backend.features.authentication.controller;
 
 
 import com.linkedin.backend.dto.ApiResponse;
-import com.linkedin.backend.features.authentication.dto.request.AuthenticationUserRequestBody;
-import com.linkedin.backend.features.authentication.dto.request.PasswordResetRequest;
-import com.linkedin.backend.features.authentication.dto.request.SendEmailRequest;
-import com.linkedin.backend.features.authentication.dto.request.UpdateUserRequest;
+import com.linkedin.backend.features.authentication.dto.request.*;
 import com.linkedin.backend.features.authentication.dto.response.AuthenticationUserResponseBody;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
@@ -123,6 +120,13 @@ public class AuthenticationController {
     public ApiResponse<List<User>> getUsersWithoutAuthenticated(@RequestAttribute("authenticatedUser") User user) {
         return ApiResponse.<List<User>>builder()
                 .data(authenticationUserService.getUserWithoutAuthenticated(user))
+                .build();
+    }
+
+    @PostMapping("/oauth/google/login-register")
+    public ApiResponse<AuthenticationUserResponseBody> googleLoginOrRegister(@RequestBody OauthLoginRequest oauthLoginRequest) {
+        return ApiResponse.<AuthenticationUserResponseBody>builder()
+                .data(authenticationUserService.googleLoginOrRegister(oauthLoginRequest))
                 .build();
     }
 

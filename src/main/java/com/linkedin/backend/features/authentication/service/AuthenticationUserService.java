@@ -3,20 +3,27 @@ package com.linkedin.backend.features.authentication.service;
 import com.linkedin.backend.exception.AppException;
 import com.linkedin.backend.exception.ErrorCode;
 import com.linkedin.backend.features.authentication.dto.request.*;
+import com.linkedin.backend.features.authentication.dto.response.ExchangeCodeForTokenResponse;
 import com.linkedin.backend.features.authentication.mapper.UserMapper;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.repository.AuthenticationUserRepository;
 import com.linkedin.backend.features.authentication.dto.response.AuthenticationUserResponseBody;
+import com.linkedin.backend.features.authentication.repository.httpclient.OauthClient;
 import com.linkedin.backend.utils.EmailService;
 import com.linkedin.backend.features.authentication.utils.Encoder;
 import com.linkedin.backend.features.authentication.utils.JsonWebToken;
 import com.linkedin.backend.features.authentication.utils.OneTimePasswordGenerator;
+import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -24,6 +31,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -36,6 +44,14 @@ public class AuthenticationUserService {
     EmailService emailService;
     UserMapper userMapper;
     EntityManager entityManager;
+    @NonFinal
+    @Value("${oauth.client.id}")
+    String oauthClientId;
+    @NonFinal
+    @Value("${oauth.client.secret}")
+    String oauthClientSecret;
+    OauthClient oauthClient;
+
 
     public User getUser(String email) {
         return authenticationUserRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -87,6 +103,53 @@ public class AuthenticationUserService {
         return AuthenticationUserResponseBody.builder()
                 .token(jsonWebToken.generateToken(authenticationUser))
                 .message("User logged in successfully")
+                .build();
+    }
+
+    public AuthenticationUserResponseBody googleLoginOrRegister(OauthLoginRequest request) {
+        String redirectUri = "http://localhost:3000/auth/"+ request.getPage();
+        ExchangeCodeForTokenResponse exchangeCodeForTokenResponse = oauthClient.exchangeCodeForToken(
+                ExchangeCodeForTokenRequest.builder()
+                        .code(request.getCode())
+                        .client_id(oauthClientId)
+                        .client_secret(oauthClientSecret)
+                        .redirect_uri(redirectUri)
+                        .grant_type("authorization_code")
+                        .build()
+        );
+
+        Claims claims = jsonWebToken.getClaimsFromGoogleOauthIdToken(exchangeCodeForTokenResponse.getId_token());
+
+        String email = claims.get("email", String.class);
+        User user = null;
+        try {
+            user = getUser(email);
+        }catch (Exception e) {
+            // User not found, will create a new one
+            log.warn("User not found with email: {}, will create a new one", email);
+        }
+        if (user == null) {
+            user = User.builder()
+                    .email(email)
+                    .firstName(claims.get("given_name", String.class))
+                    .lastName(claims.get("family_name", String.class))
+                    .profilePicture(claims.get("picture", String.class))
+                    .emailVerified(true)
+                    .lastLogin(LocalDateTime.now())
+                    .creationDate(LocalDateTime.now())
+                    .password(encoder.encode(oneTimePasswordGenerator.generateOTP())) // Temporary password
+                    .build();
+            user = authenticationUserRepository.save(user);
+        }else{
+            user.setLastLogin(LocalDateTime.now());
+            user.setProfilePicture(claims.get("picture", String.class));
+            user.setFirstName(claims.get("given_name", String.class));
+            user.setLastName(claims.get("family_name", String.class));
+            user = authenticationUserRepository.save(user);
+        }
+
+        return AuthenticationUserResponseBody.builder()
+                .token(jsonWebToken.generateToken(user))
                 .build();
     }
 

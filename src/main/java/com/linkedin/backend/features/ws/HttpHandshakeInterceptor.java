@@ -26,9 +26,6 @@ public class HttpHandshakeInterceptor implements HandshakeInterceptor {
         if(request instanceof ServletServerHttpRequest serverHttpRequest){
             String token = serverHttpRequest.getServletRequest().getParameter("token");
 
-
-
-
             log.warn("WebSocket Handshake initiated with token: {}.", token);
             if(token != null && !token.isEmpty()) {
                 // Validate the token

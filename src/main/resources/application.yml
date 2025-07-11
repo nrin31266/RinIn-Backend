@@ -26,6 +26,11 @@ brevo:
   email: "nrin31266@gmail.com"
   name: "Linkedin clone by VanRin05"
 
+oauth:
+  client:
+    id: ${OAUTH_CLIENT_ID}
+    secret: ${OAUTH_CLIENT_SECRET}
+
 server:
   address: 0.0.0.0
   servlet:
