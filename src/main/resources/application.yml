@@ -13,6 +13,16 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        search:
+          backend:
+            type: lucene
+            directory:
+              root: ./lucene/indexes
+            automatic_indexing:
+              synchronization:
+                strategy: queued
+
+
   data:
     redis:
       host: localhost

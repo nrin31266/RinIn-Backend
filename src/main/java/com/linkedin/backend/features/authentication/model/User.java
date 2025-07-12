@@ -2,7 +2,9 @@ package com.linkedin.backend.features.authentication.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.linkedin.backend.features.feed.model.Comment;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import com.linkedin.backend.features.feed.model.Post;
 import com.linkedin.backend.features.follow.model.Follow;
 import com.linkedin.backend.features.message.model.Conversation;
@@ -24,11 +26,13 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "users")
+@Indexed(index = "users") // Cho phép Hibernate Search lập chỉ mục entity này
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     @Column(unique = true, nullable = false)
+    @FullTextField
     String email;
     @Column(nullable = false)
     Boolean emailVerified;
@@ -42,21 +46,24 @@ public class User {
     private String passwordResetToken;
     @JsonIgnore
     private Date passwordResetTokenExpiryDate;
-
+    @FullTextField
     String firstName;
+    @FullTextField
     String lastName;
+    @FullTextField
     String company;
+    @FullTextField
     String position;
+    @FullTextField
     String location;
-
+    @FullTextField
     String about;
-
+    @GenericField
     Boolean profileComplete;
     String profilePicture;
-
     LocalDateTime lastLogin;
-
     @CreationTimestamp
+    @GenericField
     LocalDateTime creationDate;
 
 
