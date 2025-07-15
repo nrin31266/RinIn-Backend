@@ -88,6 +88,10 @@ public class User {
     List<Connection> initiatedConnections;
 
     @JsonIgnore
+    @OneToMany(mappedBy = "recipient", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Connection> receivedConnections;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Follow> followers;
 

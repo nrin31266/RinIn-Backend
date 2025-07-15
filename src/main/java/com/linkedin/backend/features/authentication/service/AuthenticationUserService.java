@@ -9,6 +9,8 @@ import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.repository.AuthenticationUserRepository;
 import com.linkedin.backend.features.authentication.dto.response.AuthenticationUserResponseBody;
 import com.linkedin.backend.features.authentication.repository.httpclient.OauthClient;
+import com.linkedin.backend.features.networking.domain.CONNECTION_STATUS;
+import com.linkedin.backend.features.networking.model.Connection;
 import com.linkedin.backend.utils.EmailService;
 import com.linkedin.backend.features.authentication.utils.Encoder;
 import com.linkedin.backend.features.authentication.utils.JsonWebToken;
@@ -28,8 +30,8 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -260,6 +262,111 @@ public class AuthenticationUserService {
 
     public List<User> getUserWithoutAuthenticated(User user) {
         return authenticationUserRepository.findAllByIdNot(user.getId());
+    }
+
+    public List<User>  getRecommendations(Long userId, int limit) {
+        User user = getUserById(userId);
+        Set<User> secondDegreeConnections = getSecondDegreeConnections(user);
+        if (secondDegreeConnections.isEmpty()) {
+            secondDegreeConnections = new HashSet<>(findAllByIdNot(user.getId()));
+        }
+        List<UserRecommendation> recommendations = new ArrayList<>();
+        secondDegreeConnections.stream().forEach(
+                secondDegreeConnection -> {
+                    double score = calculateSimilarityScore(user, secondDegreeConnection);
+                    score += countMutualConnections(user, secondDegreeConnection) * 5.0; // Add weight for mutual connections
+                    recommendations.add(new UserRecommendation(secondDegreeConnection, score));
+                }
+        );
+        return recommendations.stream()
+                .sorted(Comparator.comparingDouble(UserRecommendation::score).reversed())
+                .limit(limit)
+                .map(UserRecommendation::user)
+                .collect(Collectors.toList());
+    }
+
+    private double calculateSimilarityScore(User user1, User user2) {
+        double score = 0.0;
+
+        if (user1.getCompany() != null && user1.getCompany().equals(user2.getCompany())) {
+            score += 3.0; // Same company
+        }
+        if (user1.getPosition() != null && user1.getPosition().equals(user2.getPosition())) {
+            score += 2.5; // Same position
+        }
+        if (user1.getLocation() != null && user1.getLocation().equals(user2.getLocation())) {
+            score += 2.0; // Same location
+        }
+        if (user1.getAbout() != null && user1.getAbout().equals(user2.getAbout())) {
+            score += 1.0; // Similar about section
+        }
+
+        return score;
+    }
+
+    private int countMutualConnections(User user1, User user2) {
+        Set<User> user1Connections = new HashSet<>();
+
+        user1.getInitiatedConnections().stream()
+                .filter(conn -> conn.getStatus().equals(CONNECTION_STATUS.ACCEPTED))
+                .forEach(conn -> user1Connections.add(conn.getRecipient()));
+        user1.getReceivedConnections().stream()
+                .filter(conn -> conn.getStatus().equals(CONNECTION_STATUS.ACCEPTED))
+                .forEach(conn -> user1Connections.add(conn.getAuthor()));
+
+        Set<User> user2Connections = new HashSet<>();
+        user2.getInitiatedConnections().stream()
+                .filter(conn -> conn.getStatus().equals(CONNECTION_STATUS.ACCEPTED))
+                .forEach(conn -> user2Connections.add(conn.getRecipient()));
+        user2.getReceivedConnections().stream()
+                .filter(conn -> conn.getStatus().equals(CONNECTION_STATUS.ACCEPTED))
+                .forEach(conn -> user2Connections.add(conn.getAuthor()));
+
+        user1Connections.retainAll(user2Connections);
+        return user1Connections.size();
+    }
+
+    private record UserRecommendation(User user, double score) {
+    }
+
+    private Set<User> getSecondDegreeConnections(User user) {
+        Set<User> directConnections = new HashSet<>();
+
+        user.getInitiatedConnections().stream()
+                .filter(conn -> conn.getStatus().equals(CONNECTION_STATUS.ACCEPTED))
+                .forEach(conn -> directConnections.add(conn.getRecipient()));
+
+        user.getReceivedConnections().stream()
+                .filter(conn -> conn.getStatus().equals(CONNECTION_STATUS.ACCEPTED))
+                .forEach(conn -> directConnections.add(conn.getAuthor()));
+
+        Set<User> secondDegreeConnections = new HashSet<>();
+
+
+        for (User directConnection : directConnections) {
+            directConnection.getInitiatedConnections().stream()
+                    .filter(conn -> conn.getStatus().equals(CONNECTION_STATUS.ACCEPTED))
+                    .forEach(conn -> secondDegreeConnections.add(conn.getRecipient()));
+
+            directConnection.getReceivedConnections().stream()
+                    .filter(conn -> conn.getStatus().equals(CONNECTION_STATUS.ACCEPTED))
+                    .forEach(conn -> secondDegreeConnections.add(conn.getAuthor()));
+        }
+
+        secondDegreeConnections.remove(user); // Remove the user themselves from the recommendations
+        secondDegreeConnections.removeAll(directConnections); // Remove direct connections to avoid duplicates
+        // Xóa những người đã gửi // connection request đến người dùng (pending connections)
+        secondDegreeConnections.removeAll(user.getInitiatedConnections().stream()
+                .filter(conn -> conn.getStatus() == CONNECTION_STATUS.PENDING)
+                .map(Connection::getRecipient)
+                .collect(Collectors.toSet()));
+        secondDegreeConnections.removeAll(user.getReceivedConnections().stream()
+                .filter(conn -> conn.getStatus() == CONNECTION_STATUS.PENDING)
+                .map(Connection::getAuthor)
+                .collect(Collectors.toSet()));
+
+
+        return secondDegreeConnections;
     }
 
     public User getUserById(Long id){

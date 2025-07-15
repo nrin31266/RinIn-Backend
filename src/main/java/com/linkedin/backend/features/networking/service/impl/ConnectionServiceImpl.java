@@ -109,27 +109,6 @@ public class ConnectionServiceImpl implements ConnectionService {
         return connection;
     }
 
-    @Override
-    public List<User> getConnectionSuggestions(User user) {
-        List<User> allOtherUsers = userService.findAllByIdNot(user.getId());
-        List<Connection> userConnections = connectionRepository.findAllByRecipientOrAuthor(user, user);
-
-        Set<Long> connectionIds = userConnections.stream()
-                .map(conn ->
-                        conn.getAuthor().getId().equals(user.getId())
-                                ? conn.getRecipient().getId()
-                                : conn.getAuthor().getId()
-                )
-                .collect(Collectors.toSet());
-        // Bây giờ lọc allOtherUsers, chỉ giữ lại những user whose id NOT in connectionIds
-        List<User> suggestions = allOtherUsers.stream()
-                .filter(u -> !connectionIds.contains(u.getId()))
-                .toList();
-
-
-        return suggestions;
-    }
-
     private Connection getConnectionById(Long connectionId) {
         return connectionRepository.findById(connectionId)
                 .orElseThrow(() -> new AppException("Connection not found"));

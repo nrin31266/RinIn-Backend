@@ -58,14 +58,6 @@ public class ConnectionController {
                 .message("Connection marked as seen successfully")
                 .build();
     }
-    @GetMapping("/connections/suggestions")
-    public ApiResponse<List<User>> getConnectionSuggestions(@RequestAttribute("authenticatedUser") User user) {
-        List<User> suggestions = connectionService.getConnectionSuggestions(user);
-        return ApiResponse.<List<User>>builder()
-                .data(suggestions)
-                .message("Fetched connection suggestions successfully")
-                .build();
-    }
 
 
 

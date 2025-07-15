@@ -116,10 +116,10 @@ public class AuthenticationController {
                 .build();
     }
 
-    @GetMapping("/users")
-    public ApiResponse<List<User>> getUsersWithoutAuthenticated(@RequestAttribute("authenticatedUser") User user) {
+    @GetMapping("/users/suggestions")
+    public ApiResponse<List<User>> getRecommendations(@RequestAttribute("authenticatedUser") User user, @RequestParam(defaultValue = "6") int limit) {
         return ApiResponse.<List<User>>builder()
-                .data(authenticationUserService.getUserWithoutAuthenticated(user))
+                .data(authenticationUserService.getRecommendations(user.getId(), limit))
                 .build();
     }
 
