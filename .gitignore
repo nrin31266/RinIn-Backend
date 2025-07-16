@@ -88,3 +88,6 @@ keystore.jks
 secret/
 private.pem
 public.pem
+# Hibernate Search Lucene index
+lucene/*
+Dockerfile

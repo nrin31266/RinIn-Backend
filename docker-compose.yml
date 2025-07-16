@@ -1,9 +1,29 @@
-version: '3.8'
-
 services:
+  rinin:
+    build: .
+    image: rinin:latest
+    container_name: rinin
+    ports:
+      - "8080:8080"
+    environment:
+      - MYSQL_URL=jdbc:mysql://mysql-rinin:3306/linkedin?createDatabaseIfNotExist=true
+      - MYSQL_USERNAME=root
+      - MYSQL_PASSWORD=root
+      - REDIS_HOST=redis-rinin
+      - REDIS_PORT=6379
+      - JWT_SIGNER_KEY=${JWT_SIGNER_KEY}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - rinin
+
   mysql:
     image: mysql:latest
-    container_name: mysql-linkedin
+    container_name: mysql-rinin
     environment:
       MYSQL_DATABASE: linkedin
       MYSQL_ROOT_PASSWORD: root
@@ -12,23 +32,24 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - backend
+      - rinin
 
   redis:
     image: redis:latest
-    container_name: redis-linkedin
+    container_name: redis-rinin
     ports:
       - '6379:6379'
-#    restart: always
+    restart: always
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
     networks:
-      - backend
+      - rinin
 
 volumes:
   mysql-data:
   redis-data:
 
 networks:
-  backend:
+  rinin:
+    external: true
