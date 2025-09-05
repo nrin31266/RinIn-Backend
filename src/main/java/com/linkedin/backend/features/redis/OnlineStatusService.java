@@ -47,6 +47,6 @@ public class OnlineStatusService {
     }
 
     public boolean isOnline(String userId) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey("online:" + userId));
+        return redisTemplate.hasKey("online:" + userId);
     }
 }

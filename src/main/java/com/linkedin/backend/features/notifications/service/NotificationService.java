@@ -122,7 +122,5 @@ public class NotificationService {
         messagingTemplate.convertAndSend("/topic/users/" + author.getId() + "/connections/seen", connection);
     }
 
-    public void sendOnlineStatusUpdate(OnlineUserDto onlineUserDto) {
-        messagingTemplate.convertAndSend("/topic/online-status", onlineUserDto);
-    }
+
 }

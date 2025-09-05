@@ -20,6 +20,19 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     List<Connection> cFindConnectionsByUserAndStatus(@Param("userId") Long userId,
                                                      @Param("status") CONNECTION_STATUS status);
 
+    @Query("""
+    SELECT c.id FROM Connection c 
+    WHERE (c.author.id = :userId OR c.recipient.id = :userId) AND c.status = :status
+""")
+    List<Long> cGetConnectionIds(Long userId, CONNECTION_STATUS status);
+
+    @Query("""
+    SELECT (CASE WHEN c.author.id = :userId THEN c.recipient.id
+    ELSE c.author.id END) FROM Connection c
+    WHERE (c.author.id = :userId OR c.recipient.id = :userId) AND c.status = :status
+""")
+    List<Long> cGetConnectionUserIds(Long userId, CONNECTION_STATUS status);
+
     List<Connection> findConnectionByAuthorAndStatusOrRecipientAndStatus(
             User user, CONNECTION_STATUS status,
             User user1, CONNECTION_STATUS status1

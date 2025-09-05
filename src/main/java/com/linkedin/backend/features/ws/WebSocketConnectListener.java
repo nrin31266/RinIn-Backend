@@ -2,6 +2,7 @@ package com.linkedin.backend.features.ws;
 
 import com.linkedin.backend.dto.OnlineUserDto;
 import com.linkedin.backend.features.notifications.service.NotificationService;
+import com.linkedin.backend.features.notifications.service.OnlineNotificationService;
 import com.linkedin.backend.features.redis.OnlineStatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ public class WebSocketConnectListener  implements ApplicationListener<SessionCon
     private OnlineStatusService onlineStatusService;
 
     @Autowired
-    private NotificationService notificationService;
+    private OnlineNotificationService onlineNotificationService;
 
     @Override
     public void onApplicationEvent(SessionConnectEvent event) {
@@ -27,7 +28,7 @@ public class WebSocketConnectListener  implements ApplicationListener<SessionCon
 
         if (userId != null && !userId.isEmpty()) {
             onlineStatusService.markOnline(userId);
-            notificationService.sendOnlineStatusUpdate(
+            onlineNotificationService.sendOnlineStatusUpdate(
                     OnlineUserDto.builder()
                             .id(Long.parseLong(userId))
                             .isOnline(true)

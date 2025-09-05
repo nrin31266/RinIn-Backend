@@ -2,6 +2,7 @@ package com.linkedin.backend.features.ws;
 
 import com.linkedin.backend.dto.OnlineUserDto;
 import com.linkedin.backend.features.notifications.service.NotificationService;
+import com.linkedin.backend.features.notifications.service.OnlineNotificationService;
 import com.linkedin.backend.features.redis.OnlineStatusService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public class WebSocketDisconnectListener implements ApplicationListener<SessionD
     private OnlineStatusService onlineStatusService;
 
     @Autowired
-    private NotificationService notificationService;
+    private OnlineNotificationService onlineNotificationService;
 
     @Override
     public void onApplicationEvent(SessionDisconnectEvent event) {
@@ -31,7 +32,7 @@ public class WebSocketDisconnectListener implements ApplicationListener<SessionD
         if (userId != null) {
             log.warn("User {} disconnected", userId);
             onlineStatusService.markOffline(userId);
-            notificationService.sendOnlineStatusUpdate(
+            onlineNotificationService.sendOnlineStatusUpdate(
                     OnlineUserDto.builder()
                             .id(Long.parseLong(userId))
                             .isOnline(false)

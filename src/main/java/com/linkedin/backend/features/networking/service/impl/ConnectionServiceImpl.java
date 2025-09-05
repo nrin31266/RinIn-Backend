@@ -109,6 +109,16 @@ public class ConnectionServiceImpl implements ConnectionService {
         return connection;
     }
 
+    @Override
+    public List<Long> getConnectionIds(Long userId, CONNECTION_STATUS status) {
+        return connectionRepository.cGetConnectionIds(userId, status);
+    }
+
+    @Override
+    public List<Long> getConnectionUserIds(Long userId, CONNECTION_STATUS status) {
+        return connectionRepository.cGetConnectionUserIds(userId, status);
+    }
+
     private Connection getConnectionById(Long connectionId) {
         return connectionRepository.findById(connectionId)
                 .orElseThrow(() -> new AppException("Connection not found"));

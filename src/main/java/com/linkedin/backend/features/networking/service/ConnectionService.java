@@ -12,6 +12,7 @@ public interface ConnectionService {
     Connection acceptConnectionRequest(User recipient, Long connectionId);
     Connection rejectOrCancelConnection(User user,Long connectionId);
     Connection markConnectionAsSeen(User recipient, Long connectionId);
-
+    List<Long> getConnectionIds(Long userId, CONNECTION_STATUS status);
+    List<Long> getConnectionUserIds(Long userId, CONNECTION_STATUS status);
 
 }
