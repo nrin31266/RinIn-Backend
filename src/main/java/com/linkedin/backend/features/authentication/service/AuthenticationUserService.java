@@ -5,10 +5,13 @@ import com.linkedin.backend.exception.ErrorCode;
 import com.linkedin.backend.features.authentication.dto.request.*;
 import com.linkedin.backend.features.authentication.dto.response.ExchangeCodeForTokenResponse;
 import com.linkedin.backend.features.authentication.mapper.UserMapper;
+import com.linkedin.backend.features.authentication.model.RefreshToken;
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.repository.AuthenticationUserRepository;
 import com.linkedin.backend.features.authentication.dto.response.AuthenticationUserResponseBody;
+import com.linkedin.backend.features.authentication.repository.RefreshTokenRepository;
 import com.linkedin.backend.features.authentication.repository.httpclient.OauthClient;
+import com.linkedin.backend.features.authentication.utils.TOKEN_TYPE;
 import com.linkedin.backend.features.networking.domain.CONNECTION_STATUS;
 import com.linkedin.backend.features.networking.model.Connection;
 import com.linkedin.backend.utils.EmailService;
@@ -17,6 +20,8 @@ import com.linkedin.backend.features.authentication.utils.JsonWebToken;
 import com.linkedin.backend.features.authentication.utils.OneTimePasswordGenerator;
 import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityManager;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +58,9 @@ public class AuthenticationUserService {
     @Value("${oauth.client.secret}")
     String oauthClientSecret;
     OauthClient oauthClient;
+    RefreshTokenRepository refreshTokenRepository;
+    Long refreshTokenExpiryInMillis = 14 * 24 * 60 * 60 * 1000L; // 14 days
+    Long accessTokenExpiryInMillis = 15 * 60 * 1000L;
 
 
     public User getUser(String email) {
@@ -60,7 +68,8 @@ public class AuthenticationUserService {
     }
 
 
-    public AuthenticationUserResponseBody register(AuthenticationUserRequestBody authenticationUserRequestBody) {
+    public AuthenticationUserResponseBody register(AuthenticationUserRequestBody authenticationUserRequestBody,
+                                                   HttpServletResponse httpServletResponse) {
         if(authenticationUserRepository.findByEmail(authenticationUserRequestBody.getEmail()).isPresent()) {
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
         }
@@ -84,16 +93,15 @@ public class AuthenticationUserService {
                     .build());
 
 
-            return AuthenticationUserResponseBody.builder()
-                    .token(jsonWebToken.generateToken(authenticationUser))
-                    .message("User registered successfully")
-                    .build();
+            return getAuthRes(authenticationUser, httpServletResponse,
+                    authenticationUserRequestBody.getDeviceId(), authenticationUserRequestBody.getDeviceName());
         } catch (Exception e) {
             throw new RuntimeException("Cannot register user");
         }
     }
 
-    public AuthenticationUserResponseBody login(AuthenticationUserRequestBody authenticationUserRequestBody) {
+    public AuthenticationUserResponseBody login(AuthenticationUserRequestBody authenticationUserRequestBody,
+                                                HttpServletResponse httpServletResponse) {
         User authenticationUser = authenticationUserRepository.findByEmail(authenticationUserRequestBody.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -102,13 +110,54 @@ public class AuthenticationUserService {
         if (!encoder.matches(authenticationUserRequestBody.getPassword(), authenticationUser.getPassword())) {
             throw new AppException(ErrorCode.PASSWORD_MISMATCH);
         }
+        return getAuthRes(authenticationUser, httpServletResponse,
+                authenticationUserRequestBody.getDeviceId(), authenticationUserRequestBody.getDeviceName());
+    }
+
+
+    private AuthenticationUserResponseBody getAuthRes(User user, HttpServletResponse response, String deviceId, String deviceName) {
+
+        String accessToken = jsonWebToken.generateToken(user, TOKEN_TYPE.ACCESS, accessTokenExpiryInMillis);
+        String refreshToken = jsonWebToken.generateToken(user, TOKEN_TYPE.REFRESH, refreshTokenExpiryInMillis);
+
+        refreshTokenRepository.findByUserIdAndDeviceId(user.getId(), deviceId).ifPresentOrElse(
+                existingToken -> {
+                    // Update the existing refresh token
+                    existingToken.setJti(jsonWebToken.getJti(refreshToken));
+                    existingToken.setExpiryDate(new Date(Instant.now().plus(refreshTokenExpiryInMillis, ChronoUnit.MILLIS).toEpochMilli()));
+                    existingToken.setRevoked(false);
+                    existingToken.setDeviceId(deviceId);
+                    existingToken.setDeviceName(deviceName != null ? deviceName : "Unknown Device");
+                    refreshTokenRepository.save(existingToken);
+                },
+                () -> {
+                    // Create a new refresh token if it doesn't exist
+                    refreshTokenRepository.save(new RefreshToken(null ,jsonWebToken.getJti(refreshToken),
+                            new Date(Instant.now().plus(refreshTokenExpiryInMillis, ChronoUnit.MILLIS).toEpochMilli()), false, user,
+                            deviceId, deviceName != null ? deviceName : "Unknown Device"));
+                }
+        );
+
+        saveRefreshTokenInCookie(refreshToken, response);
         return AuthenticationUserResponseBody.builder()
-                .token(jsonWebToken.generateToken(authenticationUser))
+                .token(accessToken)
                 .message("User logged in successfully")
                 .build();
     }
 
-    public AuthenticationUserResponseBody googleLoginOrRegister(OauthLoginRequest request) {
+    private void saveRefreshTokenInCookie(String refreshToken, HttpServletResponse response) {
+        // Implementation for saving the refresh token
+        Cookie cookie = new Cookie("refresh-token", refreshToken);
+        cookie.setHttpOnly(true); // Chỉ cho phép truy cập từ phía máy chủ
+        cookie.setSecure(false); // Chỉ gửi cookie qua HTTPS
+        cookie.setPath("/"); // Cookie có hiệu lực trên đường dẫn này
+        int seconds = (int) (refreshTokenExpiryInMillis / 1000L);
+        cookie.setMaxAge(seconds); // Cookie có hiệu lực trong 14 ngày
+        response.addCookie(cookie); // Thêm cookie vào phản hồi HTTP
+    }
+
+    public AuthenticationUserResponseBody googleLoginOrRegister(OauthLoginRequest request,
+                                                                HttpServletResponse httpServletResponse) {
         log.info("Google login or register request: {}", request);
         try{
             String redirectUri = "http://localhost:3000/auth/"+ request.getPage();
@@ -146,9 +195,7 @@ public class AuthenticationUserService {
                 user = authenticationUserRepository.save(user);
             }
 
-            return AuthenticationUserResponseBody.builder()
-                    .token(jsonWebToken.generateToken(user))
-                    .build();
+            return getAuthRes(user, httpServletResponse, request.getDeviceId(), request.getDeviceName());
         }catch (Exception e) {
             throw new AppException("Error during Google login or registration: "+ e.getMessage());
         }
@@ -218,6 +265,41 @@ public class AuthenticationUserService {
             throw new AppException(ErrorCode.PASSWORD_RESET_FAILED);
         }
     }
+    public String logout(String refreshToken, HttpServletResponse response) {
+        try {
+            String jti = jsonWebToken.getJti(refreshToken);
+            // Revoke the refresh token
+            refreshTokenRepository.deleteByJti(jti);
+
+            // Clear the cookie
+            Cookie cookie = new Cookie("refresh-token", null);
+            cookie.setMaxAge(-1); // Set cookie to expire immediately
+            cookie.setPath("/"); // Ensure the path matches where the cookie was set
+            cookie.setHttpOnly(true); // Make the cookie HTTP only
+            cookie.setSecure(false); // Set to true if using HTTPS
+            response.addCookie(cookie);
+        }catch (Exception e) {
+            return "Error during logout: "+ e.getMessage();
+        }
+        return "Logout successful";
+    }
+    public AuthenticationUserResponseBody refreshToken(String refreshToken, HttpServletResponse response) {
+
+       try{
+           String jti = jsonWebToken.getJti(refreshToken);
+
+           String email = jsonWebToken.getEmailFromToken(refreshToken);
+           User user = authenticationUserRepository.findByEmail(email)
+                   .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND, "User not found for email in refresh token"));
+           RefreshToken storedRefreshToken = refreshTokenRepository.findByJti(jti)
+                   .orElseThrow(() -> new AppException("Refresh token not found in database"));
+
+           return getAuthRes(user, response, storedRefreshToken.getDeviceId(), storedRefreshToken.getDeviceName());
+       }catch (Exception e) {
+           throw  new AppException("Error during refresh token: "+ e.getMessage());
+       }
+    }
+
 
     public User updateUserProfile(Long id, UpdateUserRequest updateUserRequest, User authenticatedUser) {
         if(id == null || !id.equals(authenticatedUser.getId())) {

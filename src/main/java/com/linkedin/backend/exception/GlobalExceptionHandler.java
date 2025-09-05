@@ -4,6 +4,7 @@ import com.linkedin.backend.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -34,6 +35,15 @@ public class GlobalExceptionHandler {
         log.error(errorCode.getMessage(), e);
         return ResponseEntity.status(errorCode.getStatusCode()).body(ApiResponse.builder()
                 .code(errorCode.getCode())
+                .message(e.getMessage())
+                .build());
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    ResponseEntity<ApiResponse> handleMissingRequestCookieException(MissingRequestCookieException e) {
+
+        return ResponseEntity.status(400).body(ApiResponse.builder()
+                .code(400)
                 .message(e.getMessage())
                 .build());
     }

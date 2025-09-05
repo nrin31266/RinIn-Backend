@@ -19,4 +19,10 @@ public class AuthenticationUserRequestBody {
     String email;
     @NotBlank(message = "PASSWORD_IS_REQUIRED")
     String password;
+
+    @NotBlank
+    String deviceId;
+
+    @NotBlank
+    String deviceName;
 }

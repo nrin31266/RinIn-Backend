@@ -34,7 +34,9 @@ public class AuthenticationFilter extends HttpFilter {
             "/authentication/login",
             "/authentication/register",
             "/authentication/send-email",
-            "/authentication/oauth/google/login-register"
+            "/authentication/oauth/google/login-register",
+            "/authentication/logout",
+            "/authentication/refresh-token"
     );
 
     private final List<String> unsecuredPutEndpoints = Arrays.asList(
@@ -61,6 +63,7 @@ public class AuthenticationFilter extends HttpFilter {
         }
         response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         response.addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
 
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);

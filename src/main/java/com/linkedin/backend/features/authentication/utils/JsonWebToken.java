@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.RSAPublicKeySpec;
+import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -50,16 +51,22 @@ public class JsonWebToken {
         return Keys.hmacShaKeyFor(SIGNER_KEY.getBytes());
     }
 
-    public String generateToken(User user) {
+
+    public String generateToken(User user, TOKEN_TYPE type, Long millis) {
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(user.getEmail())
                 .issuedAt(new Date())
-                .expiration(new Date(Instant.now().plus(8, ChronoUnit.HOURS).toEpochMilli()))
+                .expiration(new Date(Instant.now().plus(millis, ChronoUnit.MILLIS).toEpochMilli()))
                 .signWith(getKey())
                 .claim("vanin05", "Hello friend, welcome to linkedin")
+                .claim("type", type)
                 .compact();
     }
+    public String getJti(String token) {
+        return extractClaim(token, Claims::getId);
+    }
+
 
     private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
         final Claims claims = extractAllClaims(token);

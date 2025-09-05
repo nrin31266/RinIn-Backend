@@ -1,5 +1,6 @@
 package com.linkedin.backend.features.authentication.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,4 +12,9 @@ import lombok.experimental.FieldDefaults;
 public class OauthLoginRequest {
     String code;
     String page;
+    @NotBlank
+    String deviceId;
+
+    @NotBlank
+    String deviceName;
 }

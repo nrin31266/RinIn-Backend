@@ -7,13 +7,16 @@ import com.linkedin.backend.features.authentication.dto.response.AuthenticationU
 import com.linkedin.backend.features.authentication.model.User;
 import com.linkedin.backend.features.authentication.service.AuthenticationUserService;
 import com.linkedin.backend.utils.EmailService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -33,16 +36,18 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<AuthenticationUserResponseBody> register(@RequestBody @Validated AuthenticationUserRequestBody authenticationUserRequestBody) {
+    public ApiResponse<AuthenticationUserResponseBody> register(@RequestBody @Validated AuthenticationUserRequestBody authenticationUserRequestBody,
+                                                                HttpServletResponse response) {
         return ApiResponse.<AuthenticationUserResponseBody>builder()
-                .data(authenticationUserService.register(authenticationUserRequestBody))
+                .data(authenticationUserService.register(authenticationUserRequestBody, response))
                 .build();
     }
 
     @PostMapping("/login")
-    public ApiResponse<AuthenticationUserResponseBody> login(@RequestBody @Validated AuthenticationUserRequestBody authenticationUserRequestBody) {
+    public ApiResponse<AuthenticationUserResponseBody> login(@RequestBody @Validated AuthenticationUserRequestBody authenticationUserRequestBody,
+                                                             HttpServletResponse response) {
         return ApiResponse.<AuthenticationUserResponseBody>builder()
-                .data(authenticationUserService.login(authenticationUserRequestBody))
+                .data(authenticationUserService.login(authenticationUserRequestBody, response))
                 .build();
     }
 
@@ -102,7 +107,7 @@ public class AuthenticationController {
     }
 
     @GetMapping("/profile/{id}")
-    public ApiResponse<User> getUserById(@PathVariable("id") Long id){
+    public ApiResponse<User> getUserById(@PathVariable("id") Long id) {
         return ApiResponse.<User>builder()
                 .data(authenticationUserService.getUserById(id))
                 .build();
@@ -124,9 +129,28 @@ public class AuthenticationController {
     }
 
     @PostMapping("/oauth/google/login-register")
-    public ApiResponse<AuthenticationUserResponseBody> googleLoginOrRegister(@RequestBody OauthLoginRequest oauthLoginRequest) {
+    public ApiResponse<AuthenticationUserResponseBody> googleLoginOrRegister(@RequestBody OauthLoginRequest oauthLoginRequest,
+                                                                             HttpServletResponse response) {
         return ApiResponse.<AuthenticationUserResponseBody>builder()
-                .data(authenticationUserService.googleLoginOrRegister(oauthLoginRequest))
+                .data(authenticationUserService.googleLoginOrRegister(oauthLoginRequest, response))
+                .build();
+    }
+
+    @PostMapping("/refresh-token")
+    public ApiResponse<AuthenticationUserResponseBody> refreshToken(@CookieValue("refresh-token") String refreshToken, HttpServletResponse response) {
+        return ApiResponse.<AuthenticationUserResponseBody>builder()
+                .data(authenticationUserService.refreshToken(refreshToken, response))
+                .build();
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<?> logout(
+            @CookieValue(name = "refresh-token", required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+
+        return ApiResponse.builder()
+                .message(authenticationUserService.logout(refreshToken, response))
                 .build();
     }
 
